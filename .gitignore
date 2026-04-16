@@ -1,0 +1,53 @@
+# Data persistence (Docker bind mount)
+data/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Backend build artifacts
+backend/build/
+backend/.gradle/
+backend/out/
+*.class
+*.jar
+*.war
+
+# Gradle wrapper jar (keep the scripts)
+!backend/gradle/wrapper/gradle-wrapper.jar
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Claude personal context (use CLAUDE.local.md for local overrides)
+CLAUDE.local.md
+
+# Claude Code local settings
+.claude/
+
+# Frontend local env
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# MCP local env
+mcp/.env
+mcp/.env.local

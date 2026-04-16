@@ -1,0 +1,64 @@
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema
+} from '@modelcontextprotocol/sdk/types.js'
+import { AiCoachClient } from './client.js'
+import { athleteTools, handleAthleteTool } from './tools/athletes.js'
+import { planTools, handlePlanTool } from './tools/plans.js'
+import { activityTools, handleActivityTool } from './tools/activities.js'
+
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api'
+const client = new AiCoachClient(backendUrl)
+
+const server = new Server(
+  { name: 'ai-coach', version: '1.0.0' },
+  { capabilities: { tools: {} } }
+)
+
+const allTools = [...athleteTools, ...planTools, ...activityTools]
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: allTools
+}))
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params
+
+  try {
+    const athleteToolNames = new Set(athleteTools.map(t => t.name))
+    const planToolNames = new Set(planTools.map(t => t.name))
+    const activityToolNames = new Set(activityTools.map(t => t.name))
+
+    if (athleteToolNames.has(name)) {
+      return await handleAthleteTool(name, args, client)
+    } else if (planToolNames.has(name)) {
+      return await handlePlanTool(name, args, client)
+    } else if (activityToolNames.has(name)) {
+      return await handleActivityTool(name, args, client)
+    } else {
+      return {
+        content: [{ type: 'text' as const, text: `Unknown tool: ${name}` }],
+        isError: true
+      }
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return {
+      content: [{ type: 'text' as const, text: `Error: ${message}` }],
+      isError: true
+    }
+  }
+})
+
+async function main() {
+  const transport = new StdioServerTransport()
+  await server.connect(transport)
+  process.stderr.write(`AI Coach MCP server started (backend: ${backendUrl})\n`)
+}
+
+main().catch(err => {
+  process.stderr.write(`Fatal: ${err}\n`)
+  process.exit(1)
+})
