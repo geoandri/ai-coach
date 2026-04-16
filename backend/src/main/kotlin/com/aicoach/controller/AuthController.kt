@@ -4,6 +4,7 @@ import com.aicoach.repository.AthleteRepository
 import com.aicoach.repository.StravaTokenRepository
 import com.aicoach.service.AthleteService
 import com.aicoach.service.StravaOAuthService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.view.RedirectView
 
@@ -13,7 +14,8 @@ class AuthController(
     private val oauthService: StravaOAuthService,
     private val athleteService: AthleteService,
     private val athleteRepository: AthleteRepository,
-    private val tokenRepository: StravaTokenRepository
+    private val tokenRepository: StravaTokenRepository,
+    @Value("\${app.frontend-base-url}") private val frontendBaseUrl: String
 ) {
     @GetMapping
     fun redirectToStrava(): RedirectView {
@@ -29,9 +31,9 @@ class AuthController(
     ): RedirectView {
         val internalAthleteId = state?.toLongOrNull()
         val baseRedirect = if (internalAthleteId != null) {
-            "http://localhost:5173/athletes/$internalAthleteId"
+            "$frontendBaseUrl/athletes/$internalAthleteId"
         } else {
-            "http://localhost:5173/settings"
+            "$frontendBaseUrl/settings"
         }
 
         if (error != null || code == null) {

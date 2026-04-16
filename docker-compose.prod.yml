@@ -17,9 +17,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/geoandri/ai-coach/backend:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ai_coach}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-ai_coach_user}
@@ -41,11 +39,7 @@ services:
       start_period: 60s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_STRAVA_CONNECT_URL: /api/auth/strava
+    image: ghcr.io/geoandri/ai-coach/frontend:latest
     ports:
       - "80:80"
     depends_on:
