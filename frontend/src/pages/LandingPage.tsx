@@ -86,9 +86,9 @@ export default function LandingPage() {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
               <p className="text-white text-xs font-semibold mb-1">Claude Code</p>
               <p className="text-gray-400 text-xs mb-1">
-                Use the <code className="text-orange-400">/mcp</code> slash command to browse prompts interactively, or load one directly:
+                Type <code className="text-orange-400">/</code> to browse available prompts, or load one directly using the double-underscore format:
               </p>
-              <code className="text-green-300 text-xs">/mcp ai-coach trail-running-coach</code>
+              <code className="text-green-300 text-xs">/mcp__ai-coach__trail-running-coach</code>
             </div>
           </div>
         </Step>
