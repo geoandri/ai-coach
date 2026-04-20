@@ -61,6 +61,17 @@ jobs:
           cache-from: type=gha,scope=frontend-${{ matrix.platform }}
           cache-to: type=gha,scope=frontend-${{ matrix.platform }},mode=max
 
+      - name: Build and push mcp digest
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: mcp/Dockerfile
+          push: true
+          platforms: ${{ matrix.platform }}
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/mcp:${{ github.sha }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          cache-from: type=gha,scope=mcp-${{ matrix.platform }}
+          cache-to: type=gha,scope=mcp-${{ matrix.platform }},mode=max
+
   merge:
     runs-on: ubuntu-latest
     needs: build
@@ -91,3 +102,11 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/frontend:${{ github.sha }} \
             ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/frontend:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/frontend:${{ github.sha }}-arm64
+
+      - name: Create and push mcp manifest
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/mcp:latest \
+            --tag ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/mcp:${{ github.sha }} \
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/mcp:${{ github.sha }}-amd64 \
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/ai-coach/mcp:${{ github.sha }}-arm64

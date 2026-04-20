@@ -1,14 +1,16 @@
 # MCP Server
 
-The MCP server exposes coaching tools and coach persona prompts over stdio so AI agents (Claude Desktop, Claude Code, etc.) can manage athletes and training plans directly.
+The MCP server exposes coaching tools and coach persona prompts. When running via Docker Compose it listens on HTTP at `http://localhost:3001/mcp` (Streamable HTTP transport). It also supports stdio for local development.
 
-## Build
+## Running via Docker (recommended)
+
+The MCP server is included in the Docker Compose stack and starts automatically:
 
 ```bash
-cd mcp
-npm install
-npm run build
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+The server is available at `http://localhost:3001/mcp` once the backend is healthy.
 
 ## Configure Claude Desktop
 
@@ -18,11 +20,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 {
   "mcpServers": {
     "ai-coach": {
-      "command": "node",
-      "args": ["/absolute/path/to/ai_coach/mcp/dist/index.js"],
-      "env": {
-        "BACKEND_URL": "http://localhost:8080/api"
-      }
+      "url": "http://localhost:3001/mcp"
     }
   }
 }
@@ -31,7 +29,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ## Configure Claude Code
 
 ```bash
-claude mcp add ai-coach -- node /absolute/path/to/ai_coach/mcp/dist/index.js
+claude mcp add --transport http ai-coach http://localhost:3001/mcp
 ```
 
 ## Selecting a Coach Persona
@@ -44,7 +42,32 @@ The MCP server exposes coach personas as named prompts. In Claude Desktop, type 
 |---|---|
 | `trail-running-coach` | Trail running and ultramarathon coach |
 
-Personas are loaded from `docs/personas/` at server startup. Any `.md` file in that directory that does not start with `_` is automatically exposed as a prompt. Adding a new persona file and restarting the MCP server is all that is required to make it available.
+Personas are loaded from `docs/personas/` at server startup (baked into the Docker image at build time). Any `.md` file that does not start with `_` is automatically exposed as a prompt.
+
+## Local development (stdio)
+
+To run the MCP server locally without Docker:
+
+```bash
+cd mcp
+npm install
+npm run build
+node dist/index.js   # stdio mode — no PORT env var set
+```
+
+Add to Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "ai-coach": {
+      "command": "node",
+      "args": ["/absolute/path/to/ai_coach/mcp/dist/index.js"],
+      "env": { "BACKEND_URL": "http://localhost:8080/api" }
+    }
+  }
+}
+```
 
 ## Available Tools
 

@@ -49,25 +49,24 @@ export default function LandingPage() {
 
         <Step number={2} title="Configure the MCP server">
           <p className="text-gray-400 text-sm">
-            The MCP server connects Claude to the platform. Build it once, then add it to your
-            Claude Desktop config at{' '}
+            The MCP server runs as part of the Docker stack and is reachable at{' '}
+            <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
+            Add it to your Claude Desktop config at{' '}
             <code className="text-orange-400 text-xs">
               ~/Library/Application Support/Claude/claude_desktop_config.json
             </code>
             :
           </p>
-          <Code>{`cd mcp && npm install && npm run build`}</Code>
           <Code>{`{
   "mcpServers": {
     "ai-coach": {
-      "command": "node",
-      "args": ["/absolute/path/to/ai_coach/mcp/dist/index.js"],
-      "env": { "BACKEND_URL": "http://localhost:8080/api" }
+      "url": "http://localhost:3001/mcp"
     }
   }
 }`}</Code>
           <p className="text-gray-500 text-xs mt-2">
-            For Claude Code: <code className="text-orange-400">claude mcp add ai-coach -- node /absolute/path/to/ai_coach/mcp/dist/index.js</code>
+            For Claude Code:{' '}
+            <code className="text-orange-400">claude mcp add --transport http ai-coach http://localhost:3001/mcp</code>
           </p>
         </Step>
 
