@@ -4,7 +4,7 @@ import type { AiCoachClient } from '../client.js'
 export const athleteTools = [
   {
     name: 'list_athletes',
-    description: 'List all athletes in the running coach platform.',
+    description: 'List all athletes in the AI Coach platform.',
     inputSchema: {
       type: 'object' as const,
       properties: {},

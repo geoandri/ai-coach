@@ -10,11 +10,16 @@ export interface Athlete {
     trainingDaysPerWeek?: number;
     preferredLongRunDay?: string;
     injuries?: string;
-    strengthTrainingFrequency?: number;
+    strengthTrainingFrequency?: string;
     goalType?: string;
     targetFinishTime?: string;
     trailAccess?: boolean;
     coachNotes?: string;
+    athleteSummary?: string;
+    raceName?: string;
+    raceDate?: string;
+    raceDistanceKm?: number;
+    raceElevationM?: number;
     stravaEnabled?: boolean;
     stravaAthleteId?: number;
     createdAt?: string;
@@ -31,24 +36,29 @@ export interface CreateAthleteRequest {
     trainingDaysPerWeek?: number;
     preferredLongRunDay?: string;
     injuries?: string;
-    strengthTrainingFrequency?: number;
+    strengthTrainingFrequency?: string;
     goalType?: string;
     targetFinishTime?: string;
     trailAccess?: boolean;
     coachNotes?: string;
+    athleteSummary?: string;
+    raceName?: string;
+    raceDate?: string;
+    raceDistanceKm?: number;
+    raceElevationM?: number;
 }
 export interface UpdateAthleteRequest extends Partial<CreateAthleteRequest> {
 }
 export interface DailyWorkout {
     id?: number;
     dayOfWeek?: string;
-    date?: string;
+    workoutDate?: string;
     workoutType?: string;
     description?: string;
     plannedKm?: number;
     plannedVertM?: number;
-    perceivedEffort?: string;
-    notes?: string;
+    isRestDay?: boolean;
+    isRaceDay?: boolean;
 }
 export interface WeeklyBlock {
     id?: number;
@@ -59,25 +69,26 @@ export interface WeeklyBlock {
     plannedKm?: number;
     plannedVertM?: number;
     notes?: string;
-    dailyWorkouts: DailyWorkout[];
+    workouts: DailyWorkout[];
 }
 export interface TrainingPlan {
     id: number;
     athleteId: number;
-    startDate: string;
-    endDate?: string;
+    name: string;
     totalWeeks: number;
     raceDate?: string;
     raceName?: string;
-    notes?: string;
+    tuneUpRaceName?: string;
+    tuneUpRaceDate?: string;
     weeks: WeeklyBlock[];
 }
 export interface CreateTrainingPlanRequest {
-    startDate: string;
+    name: string;
     raceDate?: string;
     raceName?: string;
+    tuneUpRaceName?: string;
+    tuneUpRaceDate?: string;
     totalWeeks: number;
-    notes?: string;
     weeks: WeeklyBlock[];
 }
 export interface PlanVsActualDto {
@@ -85,16 +96,27 @@ export interface PlanVsActualDto {
     startDate: string;
     endDate: string;
     days: DayComparison[];
+    totalPlannedKm: number;
+    totalActualKm: number;
+    adherencePercent: number;
 }
 export interface DayComparison {
     date: string;
-    plannedWorkouts: DailyWorkout[];
-    actualActivities: ActualActivitySummary[];
-    totalPlannedKm: number;
-    totalActualKm: number;
+    dayOfWeek?: string;
+    plannedWorkoutType?: string;
+    plannedDescription?: string;
+    plannedKm?: number;
+    plannedVertM?: number;
+    isRestDay: boolean;
+    activities: ActualActivitySummary[];
+    actualKm: number;
+    actualVertM: number;
     kmDiff: number;
+    hasActivity: boolean;
 }
 export interface ActualActivitySummary {
+    id: number;
+    stravaId: number;
     name?: string;
     sportType?: string;
     distanceKm: number;
@@ -105,7 +127,7 @@ export interface SyncResultDto {
     syncedCount: number;
     message: string;
 }
-export declare class RunningCoachClient {
+export declare class AiCoachClient {
     private http;
     constructor(baseUrl: string);
     listAthletes(): Promise<Athlete[]>;
@@ -119,6 +141,7 @@ export declare class RunningCoachClient {
     getWeekDetail(athleteId: number, weekNumber: number): Promise<WeeklyBlock | null>;
     getPlanVsActual(athleteId: number, startDate: string, endDate: string): Promise<PlanVsActualDto>;
     getDashboardSummary(athleteId: number): Promise<unknown>;
-    syncActivities(athleteId: number): Promise<SyncResultDto>;
+    syncActivities(athleteId: number, afterDate?: string): Promise<SyncResultDto>;
+    getStravaConnectUrl(athleteId: number): string;
 }
 //# sourceMappingURL=client.d.ts.map

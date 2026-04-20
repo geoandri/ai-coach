@@ -30,11 +30,16 @@ export const activityTools = [
     },
     {
         name: 'sync_activities',
-        description: 'Trigger a Strava activity sync for an athlete. Pulls new runs from their connected Strava account.',
+        description: [
+            'Trigger a Strava activity sync for an athlete. Pulls new runs from their connected Strava account.',
+            'Use afterDate (YYYY-MM-DD) to limit the sync to activities after a specific date.',
+            'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.'
+        ].join(' '),
         inputSchema: {
             type: 'object',
             properties: {
-                athleteId: { type: 'number', description: 'The internal athlete ID' }
+                athleteId: { type: 'number', description: 'The internal athlete ID' },
+                afterDate: { type: 'string', description: 'Only sync activities after this date (YYYY-MM-DD). Omit to sync all new activities.' }
             },
             required: ['athleteId']
         }
@@ -45,7 +50,11 @@ const PlanVsActualSchema = z.object({
     startDate: z.string(),
     endDate: z.string()
 });
-const AthleteIdSchema = z.object({ athleteId: z.number() });
+const DashboardSchema = z.object({ athleteId: z.number() });
+const SyncSchema = z.object({
+    athleteId: z.number(),
+    afterDate: z.string().optional()
+});
 export async function handleActivityTool(name, args, client) {
     const text = (obj) => [{ type: 'text', text: JSON.stringify(obj, null, 2) }];
     switch (name) {
@@ -55,13 +64,13 @@ export async function handleActivityTool(name, args, client) {
             return { content: text(result) };
         }
         case 'get_dashboard_summary': {
-            const { athleteId } = AthleteIdSchema.parse(args);
+            const { athleteId } = DashboardSchema.parse(args);
             const summary = await client.getDashboardSummary(athleteId);
             return { content: text(summary) };
         }
         case 'sync_activities': {
-            const { athleteId } = AthleteIdSchema.parse(args);
-            const result = await client.syncActivities(athleteId);
+            const { athleteId, afterDate } = SyncSchema.parse(args);
+            const result = await client.syncActivities(athleteId, afterDate);
             return { content: text(result) };
         }
         default:

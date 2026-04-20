@@ -1,13 +1,13 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { RunningCoachClient } from './client.js';
+import { AiCoachClient } from './client.js';
 import { athleteTools, handleAthleteTool } from './tools/athletes.js';
 import { planTools, handlePlanTool } from './tools/plans.js';
 import { activityTools, handleActivityTool } from './tools/activities.js';
 const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api';
-const client = new RunningCoachClient(backendUrl);
-const server = new Server({ name: 'running-coach', version: '1.0.0' }, { capabilities: { tools: {} } });
+const client = new AiCoachClient(backendUrl);
+const server = new Server({ name: 'ai-coach', version: '1.0.0' }, { capabilities: { tools: {} } });
 const allTools = [...athleteTools, ...planTools, ...activityTools];
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: allTools
@@ -45,7 +45,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    process.stderr.write(`Running Coach MCP server started (backend: ${backendUrl})\n`);
+    process.stderr.write(`AI Coach MCP server started (backend: ${backendUrl})\n`);
 }
 main().catch(err => {
     process.stderr.write(`Fatal: ${err}\n`);

@@ -2,7 +2,7 @@ import { z } from 'zod';
 export const athleteTools = [
     {
         name: 'list_athletes',
-        description: 'List all athletes in the running coach platform.',
+        description: 'List all athletes in the AI Coach platform.',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -40,7 +40,7 @@ export const athleteTools = [
                 trainingDaysPerWeek: { type: 'number', description: 'Number of training days per week' },
                 preferredLongRunDay: { type: 'string', description: 'Preferred day for long runs (e.g. Saturday)' },
                 injuries: { type: 'string', description: 'Current or recent injuries / physical limitations' },
-                strengthTrainingFrequency: { type: 'number', description: 'Strength training sessions per week' },
+                strengthTrainingFrequency: { type: 'string', description: 'Strength training frequency (e.g. "2x per week")' },
                 goalType: {
                     type: 'string',
                     enum: ['FINISH_COMFORTABLY', 'TARGET_TIME', 'PODIUM'],
@@ -48,7 +48,12 @@ export const athleteTools = [
                 },
                 targetFinishTime: { type: 'string', description: 'Target finish time (e.g. "9:30:00")' },
                 trailAccess: { type: 'boolean', description: 'Does the athlete have access to trails for training?' },
-                coachNotes: { type: 'string', description: 'Initial coach notes' }
+                coachNotes: { type: 'string', description: 'Initial coach notes' },
+                athleteSummary: { type: 'string', description: 'AI-generated summary of the athlete based on the intake conversation' },
+                raceName: { type: 'string', description: 'Goal race name (e.g. "UTMB")' },
+                raceDate: { type: 'string', description: 'Goal race date (YYYY-MM-DD)' },
+                raceDistanceKm: { type: 'number', description: 'Goal race distance in km' },
+                raceElevationM: { type: 'number', description: 'Goal race total elevation gain in metres' }
             },
             required: ['name']
         }
@@ -70,11 +75,16 @@ export const athleteTools = [
                 trainingDaysPerWeek: { type: 'number' },
                 preferredLongRunDay: { type: 'string' },
                 injuries: { type: 'string' },
-                strengthTrainingFrequency: { type: 'number' },
+                strengthTrainingFrequency: { type: 'string' },
                 goalType: { type: 'string', enum: ['FINISH_COMFORTABLY', 'TARGET_TIME', 'PODIUM'] },
                 targetFinishTime: { type: 'string' },
                 trailAccess: { type: 'boolean' },
-                coachNotes: { type: 'string' }
+                coachNotes: { type: 'string' },
+                athleteSummary: { type: 'string', description: 'AI-generated summary of the athlete based on the intake conversation' },
+                raceName: { type: 'string', description: 'Goal race name (e.g. "UTMB")' },
+                raceDate: { type: 'string', description: 'Goal race date (YYYY-MM-DD)' },
+                raceDistanceKm: { type: 'number', description: 'Goal race distance in km' },
+                raceElevationM: { type: 'number', description: 'Goal race total elevation gain in metres' }
             },
             required: ['athleteId']
         }
@@ -90,9 +100,21 @@ export const athleteTools = [
             },
             required: ['athleteId', 'note']
         }
+    },
+    {
+        name: 'get_strava_connect_url',
+        description: 'Get the Strava OAuth URL for an athlete. Present this URL to the athlete so they can open it in a browser, authorise Strava access, and return. Once they confirm, call sync_activities to pull their data.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                athleteId: { type: 'number', description: 'The internal athlete ID' }
+            },
+            required: ['athleteId']
+        }
     }
 ];
 const GetAthleteSchema = z.object({ athleteId: z.number() });
+const GetStravaConnectUrlSchema = z.object({ athleteId: z.number() });
 const CreateAthleteSchema = z.object({
     name: z.string(),
     email: z.string().optional(),
@@ -104,11 +126,16 @@ const CreateAthleteSchema = z.object({
     trainingDaysPerWeek: z.number().optional(),
     preferredLongRunDay: z.string().optional(),
     injuries: z.string().optional(),
-    strengthTrainingFrequency: z.number().optional(),
+    strengthTrainingFrequency: z.string().optional(),
     goalType: z.enum(['FINISH_COMFORTABLY', 'TARGET_TIME', 'PODIUM']).optional(),
     targetFinishTime: z.string().optional(),
     trailAccess: z.boolean().optional(),
-    coachNotes: z.string().optional()
+    coachNotes: z.string().optional(),
+    athleteSummary: z.string().optional(),
+    raceName: z.string().optional(),
+    raceDate: z.string().optional(),
+    raceDistanceKm: z.number().optional(),
+    raceElevationM: z.number().optional()
 });
 const UpdateAthleteSchema = CreateAthleteSchema.partial().extend({ athleteId: z.number() });
 const AddCoachNoteSchema = z.object({ athleteId: z.number(), note: z.string() });
@@ -138,6 +165,11 @@ export async function handleAthleteTool(name, args, client) {
             const { athleteId, note } = AddCoachNoteSchema.parse(args);
             const athlete = await client.addCoachNote(athleteId, note);
             return { content: text(athlete) };
+        }
+        case 'get_strava_connect_url': {
+            const { athleteId } = GetStravaConnectUrlSchema.parse(args);
+            const url = client.getStravaConnectUrl(athleteId);
+            return { content: text({ url, instruction: 'Ask the athlete to open this URL in a browser, approve Strava access, and return to the conversation. Then call sync_activities to pull their data.' }) };
         }
         default:
             throw new Error(`Unknown athlete tool: ${name}`);

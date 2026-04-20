@@ -1,4 +1,4 @@
-import type { RunningCoachClient } from '../client.js';
+import type { AiCoachClient } from '../client.js';
 export declare const planTools: ({
     name: string;
     description: string;
@@ -10,16 +10,18 @@ export declare const planTools: ({
                 description: string;
             };
             weekNumber?: undefined;
-            startDate?: undefined;
+            name?: undefined;
             raceDate?: undefined;
             raceName?: undefined;
+            tuneUpRaceName?: undefined;
+            tuneUpRaceDate?: undefined;
             totalWeeks?: undefined;
-            notes?: undefined;
             weeks?: undefined;
             planId?: undefined;
             phase?: undefined;
             plannedKm?: undefined;
             plannedVertM?: undefined;
+            notes?: undefined;
         };
         required: string[];
     };
@@ -37,16 +39,18 @@ export declare const planTools: ({
                 type: string;
                 description: string;
             };
-            startDate?: undefined;
+            name?: undefined;
             raceDate?: undefined;
             raceName?: undefined;
+            tuneUpRaceName?: undefined;
+            tuneUpRaceDate?: undefined;
             totalWeeks?: undefined;
-            notes?: undefined;
             weeks?: undefined;
             planId?: undefined;
             phase?: undefined;
             plannedKm?: undefined;
             plannedVertM?: undefined;
+            notes?: undefined;
         };
         required: string[];
     };
@@ -60,7 +64,7 @@ export declare const planTools: ({
                 type: string;
                 description: string;
             };
-            startDate: {
+            name: {
                 type: string;
                 description: string;
             };
@@ -72,11 +76,15 @@ export declare const planTools: ({
                 type: string;
                 description: string;
             };
-            totalWeeks: {
+            tuneUpRaceName: {
                 type: string;
                 description: string;
             };
-            notes: {
+            tuneUpRaceDate: {
+                type: string;
+                description: string;
+            };
+            totalWeeks: {
                 type: string;
                 description: string;
             };
@@ -108,15 +116,16 @@ export declare const planTools: ({
                         notes: {
                             type: string;
                         };
-                        dailyWorkouts: {
+                        workouts: {
                             type: string;
                             items: {
                                 type: string;
                                 properties: {
-                                    dayOfWeek: {
+                                    workoutDate: {
                                         type: string;
+                                        description: string;
                                     };
-                                    date: {
+                                    dayOfWeek: {
                                         type: string;
                                     };
                                     workoutType: {
@@ -131,13 +140,14 @@ export declare const planTools: ({
                                     plannedVertM: {
                                         type: string;
                                     };
-                                    perceivedEffort: {
+                                    isRestDay: {
                                         type: string;
                                     };
-                                    notes: {
+                                    isRaceDay: {
                                         type: string;
                                     };
                                 };
+                                required: string[];
                             };
                         };
                     };
@@ -149,6 +159,7 @@ export declare const planTools: ({
             phase?: undefined;
             plannedKm?: undefined;
             plannedVertM?: undefined;
+            notes?: undefined;
         };
         required: string[];
     };
@@ -167,15 +178,17 @@ export declare const planTools: ({
                 description: string;
             };
             weekNumber?: undefined;
-            startDate?: undefined;
+            name?: undefined;
             raceDate?: undefined;
             raceName?: undefined;
+            tuneUpRaceName?: undefined;
+            tuneUpRaceDate?: undefined;
             totalWeeks?: undefined;
-            notes?: undefined;
             weeks?: undefined;
             phase?: undefined;
             plannedKm?: undefined;
             plannedVertM?: undefined;
+            notes?: undefined;
         };
         required: string[];
     };
@@ -204,11 +217,12 @@ export declare const planTools: ({
             };
             notes: {
                 type: string;
-                description?: undefined;
             };
-            startDate?: undefined;
+            name?: undefined;
             raceDate?: undefined;
             raceName?: undefined;
+            tuneUpRaceName?: undefined;
+            tuneUpRaceDate?: undefined;
             totalWeeks?: undefined;
             weeks?: undefined;
             planId?: undefined;
@@ -216,7 +230,7 @@ export declare const planTools: ({
         required: string[];
     };
 })[];
-export declare function handlePlanTool(name: string, args: unknown, client: RunningCoachClient): Promise<{
+export declare function handlePlanTool(name: string, args: unknown, client: AiCoachClient): Promise<{
     content: Array<{
         type: 'text';
         text: string;

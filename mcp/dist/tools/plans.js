@@ -1,13 +1,13 @@
 import { z } from 'zod';
 const DailyWorkoutSchema = z.object({
+    workoutDate: z.string(),
     dayOfWeek: z.string().optional(),
-    date: z.string().optional(),
     workoutType: z.string().optional(),
     description: z.string().optional(),
     plannedKm: z.number().optional(),
     plannedVertM: z.number().optional(),
-    perceivedEffort: z.string().optional(),
-    notes: z.string().optional()
+    isRestDay: z.boolean().optional(),
+    isRaceDay: z.boolean().optional()
 });
 const WeeklyBlockSchema = z.object({
     weekNumber: z.number(),
@@ -17,7 +17,7 @@ const WeeklyBlockSchema = z.object({
     plannedKm: z.number().optional(),
     plannedVertM: z.number().optional(),
     notes: z.string().optional(),
-    dailyWorkouts: z.array(DailyWorkoutSchema).default([])
+    workouts: z.array(DailyWorkoutSchema).default([])
 });
 export const planTools = [
     {
@@ -57,11 +57,12 @@ export const planTools = [
             type: 'object',
             properties: {
                 athleteId: { type: 'number', description: 'The internal athlete ID' },
-                startDate: { type: 'string', description: 'Plan start date (YYYY-MM-DD)' },
+                name: { type: 'string', description: 'Plan name (e.g. "UTMB 2026 Plan")' },
                 raceDate: { type: 'string', description: 'Race date (YYYY-MM-DD)' },
                 raceName: { type: 'string', description: 'Race name' },
+                tuneUpRaceName: { type: 'string', description: 'Tune-up race name' },
+                tuneUpRaceDate: { type: 'string', description: 'Tune-up race date (YYYY-MM-DD)' },
                 totalWeeks: { type: 'number', description: 'Total number of weeks in the plan' },
-                notes: { type: 'string', description: 'Overall plan notes' },
                 weeks: {
                     type: 'array',
                     description: 'Array of weekly blocks with daily workouts',
@@ -75,20 +76,21 @@ export const planTools = [
                             plannedKm: { type: 'number' },
                             plannedVertM: { type: 'number' },
                             notes: { type: 'string' },
-                            dailyWorkouts: {
+                            workouts: {
                                 type: 'array',
                                 items: {
                                     type: 'object',
                                     properties: {
+                                        workoutDate: { type: 'string', description: 'Date of the workout (YYYY-MM-DD)' },
                                         dayOfWeek: { type: 'string' },
-                                        date: { type: 'string' },
                                         workoutType: { type: 'string' },
                                         description: { type: 'string' },
                                         plannedKm: { type: 'number' },
                                         plannedVertM: { type: 'number' },
-                                        perceivedEffort: { type: 'string' },
-                                        notes: { type: 'string' }
-                                    }
+                                        isRestDay: { type: 'boolean' },
+                                        isRaceDay: { type: 'boolean' }
+                                    },
+                                    required: ['workoutDate']
                                 }
                             }
                         },
@@ -96,7 +98,7 @@ export const planTools = [
                     }
                 }
             },
-            required: ['athleteId', 'startDate', 'totalWeeks', 'weeks']
+            required: ['athleteId', 'name', 'totalWeeks', 'weeks']
         }
     },
     {
@@ -130,11 +132,12 @@ export const planTools = [
 ];
 const CreatePlanSchema = z.object({
     athleteId: z.number(),
-    startDate: z.string(),
+    name: z.string(),
     raceDate: z.string().optional(),
     raceName: z.string().optional(),
+    tuneUpRaceName: z.string().optional(),
+    tuneUpRaceDate: z.string().optional(),
     totalWeeks: z.number(),
-    notes: z.string().optional(),
     weeks: z.array(WeeklyBlockSchema)
 });
 const DeletePlanSchema = z.object({ athleteId: z.number(), planId: z.number() });

@@ -16,7 +16,7 @@ export default function App() {
             to="/"
             className="text-orange-500 font-bold text-lg mr-6 hover:text-orange-400 transition-colors"
           >
-            Running Coach
+            AI Coach
           </NavLink>
           <NavLink
             to="/"

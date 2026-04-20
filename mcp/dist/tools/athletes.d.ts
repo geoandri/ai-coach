@@ -1,4 +1,4 @@
-import type { RunningCoachClient } from '../client.js';
+import type { AiCoachClient } from '../client.js';
 export declare const athleteTools: ({
     name: string;
     description: string;
@@ -21,6 +21,11 @@ export declare const athleteTools: ({
             targetFinishTime?: undefined;
             trailAccess?: undefined;
             coachNotes?: undefined;
+            athleteSummary?: undefined;
+            raceName?: undefined;
+            raceDate?: undefined;
+            raceDistanceKm?: undefined;
+            raceElevationM?: undefined;
             note?: undefined;
         };
         required: never[];
@@ -50,6 +55,11 @@ export declare const athleteTools: ({
             targetFinishTime?: undefined;
             trailAccess?: undefined;
             coachNotes?: undefined;
+            athleteSummary?: undefined;
+            raceName?: undefined;
+            raceDate?: undefined;
+            raceDistanceKm?: undefined;
+            raceElevationM?: undefined;
             note?: undefined;
         };
         required: string[];
@@ -119,6 +129,26 @@ export declare const athleteTools: ({
                 description: string;
             };
             coachNotes: {
+                type: string;
+                description: string;
+            };
+            athleteSummary: {
+                type: string;
+                description: string;
+            };
+            raceName: {
+                type: string;
+                description: string;
+            };
+            raceDate: {
+                type: string;
+                description: string;
+            };
+            raceDistanceKm: {
+                type: string;
+                description: string;
+            };
+            raceElevationM: {
                 type: string;
                 description: string;
             };
@@ -198,6 +228,26 @@ export declare const athleteTools: ({
             coachNotes: {
                 type: string;
                 description?: undefined;
+            };
+            athleteSummary: {
+                type: string;
+                description: string;
+            };
+            raceName: {
+                type: string;
+                description: string;
+            };
+            raceDate: {
+                type: string;
+                description: string;
+            };
+            raceDistanceKm: {
+                type: string;
+                description: string;
+            };
+            raceElevationM: {
+                type: string;
+                description: string;
             };
             note?: undefined;
         };
@@ -232,11 +282,16 @@ export declare const athleteTools: ({
             targetFinishTime?: undefined;
             trailAccess?: undefined;
             coachNotes?: undefined;
+            athleteSummary?: undefined;
+            raceName?: undefined;
+            raceDate?: undefined;
+            raceDistanceKm?: undefined;
+            raceElevationM?: undefined;
         };
         required: string[];
     };
 })[];
-export declare function handleAthleteTool(name: string, args: unknown, client: RunningCoachClient): Promise<{
+export declare function handleAthleteTool(name: string, args: unknown, client: AiCoachClient): Promise<{
     content: Array<{
         type: 'text';
         text: string;

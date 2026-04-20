@@ -1,5 +1,5 @@
 import axios from 'axios';
-export class RunningCoachClient {
+export class AiCoachClient {
     http;
     constructor(baseUrl) {
         this.http = axios.create({ baseURL: baseUrl });
@@ -68,9 +68,13 @@ export class RunningCoachClient {
         return data;
     }
     // Strava
-    async syncActivities(athleteId) {
-        const { data } = await this.http.get(`/athletes/${athleteId}/activities/sync`);
+    async syncActivities(athleteId, afterDate) {
+        const params = afterDate ? `?afterDate=${afterDate}` : '';
+        const { data } = await this.http.get(`/athletes/${athleteId}/activities/sync${params}`);
         return data;
+    }
+    getStravaConnectUrl(athleteId) {
+        return `${this.http.defaults.baseURL}/athletes/${athleteId}/auth/strava`;
     }
 }
 //# sourceMappingURL=client.js.map

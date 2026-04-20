@@ -1,4 +1,4 @@
-import type { RunningCoachClient } from '../client.js';
+import type { AiCoachClient } from '../client.js';
 export declare const activityTools: ({
     name: string;
     description: string;
@@ -17,6 +17,7 @@ export declare const activityTools: ({
                 type: string;
                 description: string;
             };
+            afterDate?: undefined;
         };
         required: string[];
     };
@@ -32,11 +33,31 @@ export declare const activityTools: ({
             };
             startDate?: undefined;
             endDate?: undefined;
+            afterDate?: undefined;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: "object";
+        properties: {
+            athleteId: {
+                type: string;
+                description: string;
+            };
+            afterDate: {
+                type: string;
+                description: string;
+            };
+            startDate?: undefined;
+            endDate?: undefined;
         };
         required: string[];
     };
 })[];
-export declare function handleActivityTool(name: string, args: unknown, client: RunningCoachClient): Promise<{
+export declare function handleActivityTool(name: string, args: unknown, client: AiCoachClient): Promise<{
     content: Array<{
         type: 'text';
         text: string;
