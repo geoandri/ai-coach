@@ -21,51 +21,34 @@ For AI agent coaching behaviour see **[AGENT_INSTRUCTIONS.md](./AGENT_INSTRUCTIO
 ## Starting the Platform
 
 ```bash
-# 1. Database
-docker-compose up -d
-
-# 2. Backend (runs Liquibase migrations on startup)
-cd backend && ./gradlew bootRun
-
-# 3. Frontend
-cd frontend && npm run dev
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-UI is available at `http://localhost:5173`. Backend API at `http://localhost:8080/api`.
+UI is available at `http://localhost`. The MCP server is at `http://localhost:3001/mcp`.
 
 ---
 
 ## MCP Server
 
-The MCP server wraps the backend REST API and exposes it as tools for AI agents. It uses stdio transport and is compatible with any MCP-capable agent platform.
+The MCP server wraps the backend REST API and exposes it as tools for AI agents. It runs as part of the Docker Compose stack using Streamable HTTP transport.
 
-**Build:**
-```bash
-cd mcp && npm install && npm run build
-```
-
-**Run:**
-```bash
-node mcp/dist/index.js
-```
-
-**Environment:**
-```
-BACKEND_URL=http://localhost:8080/api   # default if not set
-```
-
-**Claude Desktop / Claude Code configuration** (`~/.claude.json` or Claude Desktop settings):
+**Claude Desktop configuration** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
-  "ai-coach": {
-    "command": "node",
-    "args": ["/absolute/path/to/ai_coach/mcp/dist/index.js"],
-    "env": { "BACKEND_URL": "http://localhost:8080/api" }
+  "mcpServers": {
+    "ai-coach": {
+      "url": "http://localhost:3001/mcp"
+    }
   }
 }
 ```
 
-For other platforms (Cursor, Copilot, etc.) configure the MCP server according to that platform's tool integration docs, pointing at the same stdio process. The server advertises its tools dynamically via `tools/list` — no static configuration of individual tools is needed.
+**Claude Code configuration:**
+```bash
+claude mcp add --transport http ai-coach http://localhost:3001/mcp
+```
+
+The server advertises its tools dynamically via `tools/list` — no static configuration of individual tools is needed.
 
 ---
 

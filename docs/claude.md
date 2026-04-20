@@ -23,22 +23,12 @@ For Strava integration setup see @SETUP.md.
 ## Key Commands
 
 ```bash
-# Start database
-docker-compose up -d
-
-# Backend (runs DB migrations on startup)
-cd backend && ./gradlew bootRun
-
-# Frontend
-cd frontend && npm run dev
-
-# MCP server
-cd mcp && npm install && npm run build
-node mcp/dist/index.js
+# Start full stack (backend, frontend, MCP server, database)
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-- UI: `http://localhost:5173`
-- API: `http://localhost:8080/api`
+- UI: `http://localhost`
+- MCP server: `http://localhost:3001/mcp`
 
 ---
 
@@ -50,7 +40,7 @@ backend/         Spring Boot REST API — business logic, DB, Strava OAuth + syn
 mcp/             MCP server — wraps backend API as tools for AI agents
 ```
 
-The MCP server uses **stdio transport**. It exposes tools dynamically — no static tool configuration needed. Agents discover tools at runtime via `tools/list`.
+The MCP server uses **Streamable HTTP transport** (port 3001). It exposes tools dynamically — no static tool configuration needed. Agents discover tools at runtime via `tools/list`.
 
 ---
 
@@ -65,7 +55,7 @@ The MCP server uses **stdio transport**. It exposes tools dynamically — no sta
 | `SPRING_DATASOURCE_PASSWORD` | `ai_coach_pass` | |
 | `STRAVA_CLIENT_ID` | — | Required for Strava OAuth |
 | `STRAVA_CLIENT_SECRET` | — | Required for Strava OAuth |
-| `STRAVA_REDIRECT_URI` | `http://localhost:8080/api/localhost:8080/api/auth/strava/callback` | Optional override |
+| `STRAVA_REDIRECT_URI` | `http://localhost/api/auth/strava/callback` | Optional override |
 
 **MCP server:**
 
@@ -108,14 +98,20 @@ Strava & adherence: `sync_activities`, `get_strava_connect_url`, `get_dashboard_
 
 ## Claude Desktop / Claude Code MCP Config
 
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
-  "ai-coach": {
-    "command": "node",
-    "args": ["/absolute/path/to/ai_coach/mcp/dist/index.js"],
-    "env": { "BACKEND_URL": "http://localhost:8080/api" }
+  "mcpServers": {
+    "ai-coach": {
+      "url": "http://localhost:3001/mcp"
+    }
   }
 }
+```
+
+**Claude Code:**
+```bash
+claude mcp add --transport http ai-coach http://localhost:3001/mcp
 ```
 
 ---
