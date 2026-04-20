@@ -19,7 +19,8 @@ import { createServer } from 'http'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api'
-const client = new AiCoachClient(backendUrl)
+const publicUrl = process.env.PUBLIC_URL ?? backendUrl
+const client = new AiCoachClient(backendUrl, publicUrl)
 
 // Load coach persona prompts from docs/personas/ at startup.
 // Files starting with _ (e.g. _base.md, _template.md) are skipped.
@@ -135,7 +136,7 @@ async function startHttp(port: number) {
   })
 
   httpServer.listen(port, () => {
-    process.stderr.write(`AI Coach MCP server listening on http://0.0.0.0:${port}/mcp (backend: ${backendUrl})\n`)
+    process.stderr.write(`AI Coach MCP server listening on http://0.0.0.0:${port}/mcp (backend: ${backendUrl}, public: ${publicUrl})\n`)
     process.stderr.write(`Loaded ${personas.length} persona(s): ${personas.map(p => p.name).join(', ') || 'none'}\n`)
   })
 }

@@ -46,6 +46,7 @@ services:
       dockerfile: mcp/Dockerfile
     environment:
       BACKEND_URL: http://backend:8080/api
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost/api}
       PORT: 3001
     ports:
       - "3001:3001"

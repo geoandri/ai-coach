@@ -141,9 +141,11 @@ export interface SyncResultDto {
 
 export class AiCoachClient {
   private http: AxiosInstance
+  private publicBaseUrl: string
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, publicBaseUrl?: string) {
     this.http = axios.create({ baseURL: baseUrl })
+    this.publicBaseUrl = publicBaseUrl ?? baseUrl
   }
 
   // Athletes
@@ -224,6 +226,6 @@ export class AiCoachClient {
   }
 
   getStravaConnectUrl(athleteId: number): string {
-    return `${this.http.defaults.baseURL}/athletes/${athleteId}/auth/strava`
+    return `${this.publicBaseUrl}/athletes/${athleteId}/auth/strava`
   }
 }
