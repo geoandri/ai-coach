@@ -1,6 +1,6 @@
 # AI Coach
 
-A personalized ultramarathon training platform. An AI agent acts as a running coach: it interviews the athlete, pulls their Strava history, generates a periodized training plan, and tracks week-by-week adherence.
+A personalised AI coaching platform that supports multiple coach personas. An AI agent acts as a personal coach: it interviews the athlete, pulls their Strava history, generates a periodized training plan, and tracks week-by-week adherence. After spinning up the container, open **http://localhost** — the landing page provides all the details you need to get started, including how to connect your AI client and choose a coach persona.
 
 ---
 

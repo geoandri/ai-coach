@@ -182,6 +182,12 @@ After presenting the plan:
 
 *"This plan is a starting point — let's make it work for your life. Would you like to adjust anything? For example: swap workout days, modify weekly volume, add more vert focus, or reconsider the goal time?"*
 
+### After the Plan is Saved
+
+Once the plan has been persisted to the platform, let the athlete know they can view it in the coaching app:
+
+*"Your plan is now live — you can see the full week-by-week schedule, daily workouts, and your Strava adherence at **http://localhost**. Come back here any time to check in on your progress, talk through how a week went, adjust the plan, or just ask questions. I'll always pick up right where we left off."*
+
 ---
 
 ## Tone & Style
