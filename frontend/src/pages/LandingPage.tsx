@@ -120,6 +120,15 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+          <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+            <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+            <div>
+              <p className="text-white text-sm font-medium">road-running-coach</p>
+              <p className="text-gray-400 text-xs mt-0.5">
+                Road running coach specialised in 5 km, 10 km, half-marathon, and marathon. Covers Strava intake, distance-specific periodized plans, race day strategy, and ongoing check-ins.
+              </p>
+            </div>
+          </div>
           <div className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
             <div className="w-2 h-2 rounded-full bg-gray-600 mt-1.5 flex-shrink-0" />
             <div>
