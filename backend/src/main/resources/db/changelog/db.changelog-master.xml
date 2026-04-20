@@ -179,7 +179,7 @@
     <!-- ============================================================ -->
     <!-- 004 — Seed training plan (all 15 weeks)                       -->
     <!-- ============================================================ -->
-    <changeSet id="004-seed-training-plan" author="aicoach">
+    <changeSet id="004-seed-training-plan" author="aicoach" context="!test">
 
         <insert tableName="training_plans">
             <column name="id" valueNumeric="1"/>

@@ -1,0 +1,11 @@
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: false
+complexity:
+  TooManyFunctions:
+    active: false
+naming:
+  FunctionNaming:
+    active: false
