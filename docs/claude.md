@@ -1,8 +1,10 @@
 # AI Coach — Claude Context
 
-AI-assisted trail running coach platform. An AI agent acts as a personal coach: gathers athlete info via conversation, generates personalised ultramarathon training plans, and tracks adherence by syncing Strava activities.
+AI-assisted coaching platform. An AI agent acts as a personal coach: gathers athlete info via conversation, generates personalised training plans, and tracks adherence by syncing Strava activities.
 
-For full coaching behaviour instructions see @AGENT_INSTRUCTIONS.md.
+For platform-level agent behaviour (MCP rules, tool usage, check-in workflow) see @docs/personas/_base.md.
+For the trail running coach persona see @docs/personas/trail-running-coach.md.
+For adding a new coach persona see @docs/personas/_template.md.
 For platform setup and schemas see @PLATFORM.md.
 For Strava integration setup see @SETUP.md.
 
