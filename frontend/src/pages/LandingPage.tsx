@@ -71,19 +71,25 @@ export default function LandingPage() {
         </Step>
 
         <Step number={3} title="Select a coach persona in Claude">
-          <p className="text-gray-400 text-sm">
-            The MCP server exposes coach personas as named prompts. In Claude Desktop, open a new
-            conversation, type <code className="text-orange-400 text-xs font-mono">@ai-coach</code> and
-            select a persona from the list (e.g. <span className="text-white">trail-running-coach</span>).
-            Claude will load the full coaching instructions as its context.
+          <p className="text-gray-400 text-sm mb-3">
+            The MCP server exposes coach personas as named prompts. Selecting one injects the full
+            coaching instructions — role, information-gathering workflow, plan generation logic, and
+            tone — into Claude's context. Without this step Claude has the tools but no coaching behaviour.
           </p>
-          <div className="bg-orange-900/20 border border-orange-700/40 rounded-lg p-3 mt-3">
-            <p className="text-orange-300 text-xs font-medium mb-1">What this does</p>
-            <p className="text-gray-400 text-xs leading-relaxed">
-              Selecting a persona injects the coaching instructions — role, information-gathering
-              workflow, plan generation logic, and tone — into Claude's context. Without this step
-              Claude has the tools but no coaching behaviour.
-            </p>
+          <div className="space-y-2">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <p className="text-white text-xs font-semibold mb-1">Claude Desktop</p>
+              <p className="text-gray-400 text-xs">
+                Type <code className="text-orange-400">@ai-coach</code> in a new conversation and select a persona from the dropdown.
+              </p>
+            </div>
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <p className="text-white text-xs font-semibold mb-1">Claude Code</p>
+              <p className="text-gray-400 text-xs mb-1">
+                Use the <code className="text-orange-400">/mcp</code> slash command to browse prompts interactively, or load one directly:
+              </p>
+              <code className="text-green-300 text-xs">/mcp ai-coach trail-running-coach</code>
+            </div>
           </div>
         </Step>
 
