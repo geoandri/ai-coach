@@ -2,19 +2,56 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
-  ListToolsRequestSchema
+  ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
 import { AiCoachClient } from './client.js'
 import { athleteTools, handleAthleteTool } from './tools/athletes.js'
 import { planTools, handlePlanTool } from './tools/plans.js'
 import { activityTools, handleActivityTool } from './tools/activities.js'
+import { readFileSync, readdirSync } from 'fs'
+import { join, dirname, basename } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api'
 const client = new AiCoachClient(backendUrl)
 
+// Load coach persona prompts from docs/personas/ at startup.
+// Files starting with _ (e.g. _base.md, _template.md) are skipped.
+const personasDir = join(__dirname, '..', '..', '..', 'docs', 'personas')
+
+interface CoachPrompt {
+  name: string
+  description: string
+  content: string
+}
+
+function loadPersonas(): CoachPrompt[] {
+  try {
+    return readdirSync(personasDir)
+      .filter(f => f.endsWith('.md') && !f.startsWith('_'))
+      .map(f => {
+        const name = basename(f, '.md')
+        const content = readFileSync(join(personasDir, f), 'utf-8')
+        const titleMatch = content.match(/^#\s+(.+)$/m)
+        const description = titleMatch
+          ? `Load the ${titleMatch[1]} persona as your coaching context`
+          : `Load the ${name} coach persona`
+        return { name, description, content }
+      })
+  } catch {
+    return []
+  }
+}
+
+const personas = loadPersonas()
+
 const server = new Server(
   { name: 'ai-coach', version: '1.0.0' },
-  { capabilities: { tools: {} } }
+  { capabilities: { tools: {}, prompts: {} } }
 )
 
 const allTools = [...athleteTools, ...planTools, ...activityTools]
@@ -22,6 +59,29 @@ const allTools = [...athleteTools, ...planTools, ...activityTools]
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: allTools
 }))
+
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+  prompts: personas.map(p => ({
+    name: p.name,
+    description: p.description
+  }))
+}))
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const persona = personas.find(p => p.name === request.params.name)
+  if (!persona) {
+    throw new Error(`Unknown prompt: ${request.params.name}`)
+  }
+  return {
+    description: persona.description,
+    messages: [
+      {
+        role: 'user' as const,
+        content: { type: 'text' as const, text: persona.content }
+      }
+    ]
+  }
+})
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params

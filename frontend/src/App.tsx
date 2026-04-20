@@ -6,6 +6,7 @@ import AthleteDashboard from './pages/AthleteDashboard'
 import AthletePlanView from './pages/AthletePlanView'
 import AthleteActivities from './pages/AthleteActivities'
 import AthleteSettings from './pages/AthleteSettings'
+import LandingPage from './pages/LandingPage'
 
 export default function App() {
   return (
@@ -28,12 +29,25 @@ export default function App() {
               }`
             }
           >
+            Get Started
+          </NavLink>
+          <NavLink
+            to="/athletes"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-orange-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`
+            }
+          >
             Athletes
           </NavLink>
         </nav>
         <main className="p-6">
           <Routes>
-            <Route path="/" element={<AthletesPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/athletes" element={<AthletesPage />} />
             <Route path="/athletes/new" element={<CreateAthletePage />} />
             <Route path="/athletes/:athleteId" element={<AthleteDetailPage />}>
               <Route index element={<AthleteDashboard />} />
@@ -42,10 +56,10 @@ export default function App() {
               <Route path="settings" element={<AthleteSettings />} />
             </Route>
             {/* Legacy redirects */}
-            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="/plan" element={<Navigate to="/" replace />} />
-            <Route path="/activities" element={<Navigate to="/" replace />} />
-            <Route path="/settings" element={<Navigate to="/" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/athletes" replace />} />
+            <Route path="/plan" element={<Navigate to="/athletes" replace />} />
+            <Route path="/activities" element={<Navigate to="/athletes" replace />} />
+            <Route path="/settings" element={<Navigate to="/athletes" replace />} />
           </Routes>
         </main>
       </div>

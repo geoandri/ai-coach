@@ -1,6 +1,6 @@
 # MCP Server
 
-The MCP server exposes coaching tools over stdio so AI agents (Claude Desktop, Claude Code, etc.) can manage athletes and training plans directly.
+The MCP server exposes coaching tools and coach persona prompts over stdio so AI agents (Claude Desktop, Claude Code, etc.) can manage athletes and training plans directly.
 
 ## Build
 
@@ -33,6 +33,18 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```bash
 claude mcp add ai-coach -- node /absolute/path/to/ai_coach/mcp/dist/index.js
 ```
+
+## Selecting a Coach Persona
+
+The MCP server exposes coach personas as named prompts. In Claude Desktop, type `@ai-coach` in a new conversation and select a persona from the list. Claude will load the full coaching instructions as its context.
+
+**Available personas:**
+
+| Prompt name | Description |
+|---|---|
+| `trail-running-coach` | Trail running and ultramarathon coach |
+
+Personas are loaded from `docs/personas/` at server startup. Any `.md` file in that directory that does not start with `_` is automatically exposed as a prompt. Adding a new persona file and restarting the MCP server is all that is required to make it available.
 
 ## Available Tools
 
