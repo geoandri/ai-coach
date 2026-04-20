@@ -40,14 +40,7 @@ export default function LandingPage() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-6">
         <h2 className="text-lg font-semibold text-white">How it works</h2>
 
-        <Step number={1} title="Start the platform">
-          <p className="text-gray-400 text-sm">
-            Run the Docker stack — this starts the backend, database, and serves this UI.
-          </p>
-          <Code>{`docker compose -f docker-compose.prod.yml up -d`}</Code>
-        </Step>
-
-        <Step number={2} title="Configure the MCP server">
+        <Step number={1} title="Configure the MCP server">
           <p className="text-gray-400 text-sm">
             The MCP server runs as part of the Docker stack and is reachable at{' '}
             <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
@@ -70,7 +63,7 @@ export default function LandingPage() {
           </p>
         </Step>
 
-        <Step number={3} title="Select a coach persona in Claude">
+        <Step number={2} title="Select a coach persona in Claude">
           <p className="text-gray-400 text-sm mb-3">
             The MCP server exposes coach personas as named prompts. Selecting one injects the full
             coaching instructions — role, information-gathering workflow, plan generation logic, and
@@ -93,7 +86,7 @@ export default function LandingPage() {
           </div>
         </Step>
 
-        <Step number={4} title="Start coaching">
+        <Step number={3} title="Start coaching">
           <p className="text-gray-400 text-sm">
             Claude will ask for the athlete's name, load their profile if one exists, and guide the
             session from there. New athletes are created through the conversation; their profiles and
