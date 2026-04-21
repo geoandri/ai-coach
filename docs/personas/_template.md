@@ -141,17 +141,13 @@ Once the plan has been persisted to the platform, let the athlete know they can 
 
 *"Your plan is now live — you can view the full week-by-week schedule, daily workouts, and your adherence at **http://localhost/athletes/{athleteId}/plan** (replace `{athleteId}` with your athlete ID).*
 
-*I can also print your plan right here in two formats — just say which you'd like:*
-- ***Short format** — a compact week-by-week table showing dates, session type, volume, and effort for each day. Good for a quick wall reference.*
-- ***Detailed format** — the full plan including daily descriptions, effort levels, coaching notes, and event day strategy. Good for taking to training or competition.*
+*From that page you can also print your plan to PDF in two formats — use your browser's print function (Ctrl+P / Cmd+P) and select 'Save as PDF':*
+- ***Short format** — a compact overview for a quick wall or pocket reference.*
+- ***Detailed format** — the full plan with descriptions, coaching notes, and event day strategy to take to training or competition.*
 
 *Come back here any time to check in on your progress, talk through how a week went, adjust the plan, or just ask questions. I'll always pick up right where we left off."*
 
-When printing the **short format**, output a markdown table per week with columns appropriate to the sport (e.g. Day | Date | Session | Volume | Effort).
-
-When printing the **detailed format**, output each week as a headed section with the full daily breakdown, effort descriptions, and a summary of the week's focus. Follow with the coaching notes and event day strategy sections in full.
-
-> TODO: Adjust the short-format table columns and detailed-format content to match the sport's session types and volume metric.
+> TODO: Adjust the format descriptions to match what the app's plan page actually shows for this sport.
 
 ---
 

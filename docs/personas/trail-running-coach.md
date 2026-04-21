@@ -188,15 +188,11 @@ Once the plan has been persisted to the platform, let the athlete know they can 
 
 *"Your plan is now live — you can view the full week-by-week schedule, daily workouts, and your Strava adherence at **http://localhost/athletes/{athleteId}/plan** (replace `{athleteId}` with your athlete ID).*
 
-*I can also print your plan right here in two formats — just say which you'd like:*
-- ***Short format** — a compact week-by-week table showing dates, workout type, distance, and vert for each day. Good for a quick wall reference.*
-- ***Detailed format** — the full plan including daily descriptions, effort levels, coaching notes, and race day strategy. Good for taking on the road.*
+*From that page you can also print your plan to PDF in two formats — use your browser's print function (Ctrl+P / Cmd+P) and select 'Save as PDF':*
+- ***Short format** — a compact overview for a quick wall or pocket reference.*
+- ***Detailed format** — the full plan with descriptions, coaching notes, and race day strategy to take on the road.*
 
 *Come back here any time to check in on your progress, talk through how a week went, adjust the plan, or just ask questions. I'll always pick up right where we left off."*
-
-When printing the **short format**, output a markdown table per week with columns: Day | Date | Workout | Km | Vert (m) | Effort.
-
-When printing the **detailed format**, output each week as a headed section with the full daily breakdown, effort descriptions, and a summary of the week's focus. Follow with the coaching notes and race day strategy sections in full.
 
 ---
 
