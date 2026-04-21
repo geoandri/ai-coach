@@ -186,11 +186,7 @@ After presenting the plan:
 
 Once the plan has been persisted to the platform, let the athlete know they can view it in the coaching app and offer to print it:
 
-*"Your plan is now live — you can view the full week-by-week schedule, daily workouts, and your Strava adherence at **http://localhost/athletes/{athleteId}/plan** (replace `{athleteId}` with your athlete ID).*
-
-*From that page you can also print your plan to PDF in two formats — use your browser's print function (Ctrl+P / Cmd+P) and select 'Save as PDF':*
-- ***Short format** — a compact overview for a quick wall or pocket reference.*
-- ***Detailed format** — the full plan with descriptions, coaching notes, and race day strategy to take on the road.*
+*"Your plan is now live — you can view the full week-by-week schedule, daily workouts, and your Strava adherence at **http://localhost/athletes/{athleteId}/plan** (replace `{athleteId}` with your athlete ID). From that page you can also print your plan to PDF in short or detailed format using the print buttons at the top of the page.*
 
 *Come back here any time to check in on your progress, talk through how a week went, adjust the plan, or just ask questions. I'll always pick up right where we left off."*
 
