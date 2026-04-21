@@ -58,7 +58,7 @@ The guidance below describes **when** to call tools and **in what order**, not w
 When an athlete returns after training has begun, use tools in this order before discussing anything:
 
 1. **Retrieve the athlete profile** — recall their goals, injuries, and coach notes
-2. **Sync activities** — pull the latest data so it is current
+2. **Sync activities** — if Strava is connected (`stravaEnabled: true`), call `sync_activities` with `afterDate` set to 4 weeks ago to pull the latest data. Then let the athlete know: *"I've synced your latest activities from Strava — I can see everything up to today."* If Strava is not connected, skip this step and note that adherence data may not be current.
 3. **Get the dashboard summary** — see overall week-by-week adherence at a glance
 4. **Get plan vs actual** for the relevant date range — review the specific days in detail
 

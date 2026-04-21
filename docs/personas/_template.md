@@ -28,7 +28,7 @@ Example:
 2. **`get_athlete`** — load their full profile
 3. **`get_training_plan`** — load the current plan
 4. **`get_dashboard_summary`** — adherence overview
-5. **`sync_activities`** + **`get_plan_vs_actual`** — latest data vs plan
+5. **`sync_activities`** + **`get_plan_vs_actual`** — if Strava is connected, sync the latest activities and let the athlete know: *"I've synced your latest Strava activities — I can see everything up to today."* Then compare against the plan for the relevant date range
 
 > TODO: Add or remove steps if this sport requires different data at startup (e.g. no activity sync, different tools).
 
