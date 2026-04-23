@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { WeeklyBlock, DailyWorkout } from '../types/plan'
 
 interface Props {
   week: WeeklyBlock
+  isCurrentWeek?: boolean
 }
 
 const typeColors: Record<string, string> = {
@@ -34,17 +35,36 @@ function WorkoutRow({ w }: { w: DailyWorkout }) {
   )
 }
 
-export function WeekAccordion({ week }: Props) {
-  const [open, setOpen] = useState(false)
+export function WeekAccordion({ week, isCurrentWeek = false }: Props) {
+  const [open, setOpen] = useState(isCurrentWeek)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isCurrentWeek && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [isCurrentWeek])
 
   return (
-    <div className="border border-gray-800 rounded-xl overflow-hidden mb-2">
+    <div
+      ref={ref}
+      className={`rounded-xl overflow-hidden mb-2 ${
+        isCurrentWeek
+          ? 'border-2 border-orange-500'
+          : 'border border-gray-800'
+      }`}
+    >
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center px-4 py-3 bg-gray-900 hover:bg-gray-800 transition-colors text-left"
       >
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500 w-12">Week {week.weekNumber}</span>
+          {isCurrentWeek && (
+            <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full font-medium">
+              Current
+            </span>
+          )}
           <span className="text-sm font-medium">{week.phase}</span>
           <span className="text-xs text-gray-500">{week.startDate} – {week.endDate}</span>
         </div>

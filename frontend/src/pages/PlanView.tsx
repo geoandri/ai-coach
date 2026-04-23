@@ -1,6 +1,11 @@
 import { usePlan } from '../hooks/usePlan'
 import { WeekAccordion } from '../components/WeekAccordion'
 
+function isCurrentWeek(startDate: string, endDate: string): boolean {
+  const today = new Date().toISOString().slice(0, 10)
+  return today >= startDate && today <= endDate
+}
+
 export default function PlanView() {
   const { data, loading, error } = usePlan()
 
@@ -19,7 +24,11 @@ export default function PlanView() {
       </div>
       <div>
         {data.weeks.map(week => (
-          <WeekAccordion key={week.weekNumber} week={week} />
+          <WeekAccordion
+            key={week.weekNumber}
+            week={week}
+            isCurrentWeek={isCurrentWeek(week.startDate, week.endDate)}
+          />
         ))}
       </div>
     </div>

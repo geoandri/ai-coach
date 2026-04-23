@@ -4,6 +4,11 @@ import { useAthletePlan } from '../hooks/useAthletePlan'
 import { WeekAccordion } from '../components/WeekAccordion'
 import { athleteApi } from '../api/athleteApi'
 
+function isCurrentWeek(startDate: string, endDate: string): boolean {
+  const today = new Date().toISOString().slice(0, 10)
+  return today >= startDate && today <= endDate
+}
+
 export default function AthletePlanView() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
@@ -64,7 +69,11 @@ export default function AthletePlanView() {
       </div>
       <div>
         {data.weeks.map(week => (
-          <WeekAccordion key={week.weekNumber} week={week} />
+          <WeekAccordion
+            key={week.weekNumber}
+            week={week}
+            isCurrentWeek={isCurrentWeek(week.startDate, week.endDate)}
+          />
         ))}
       </div>
     </div>
