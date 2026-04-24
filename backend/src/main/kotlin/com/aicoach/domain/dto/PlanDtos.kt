@@ -14,6 +14,29 @@ data class TrainingPlanDto(
     val weeks: List<WeeklyBlockDto>
 )
 
+data class TrainingPlanSummaryDto(
+    val id: Long,
+    val athleteId: Long,
+    val name: String,
+    val raceName: String?,
+    val raceDate: LocalDate?,
+    val tuneUpRaceName: String?,
+    val tuneUpRaceDate: LocalDate?,
+    val totalWeeks: Int,
+    val weeks: List<WeeklyBlockSummaryDto>
+)
+
+data class WeeklyBlockSummaryDto(
+    val id: Long,
+    val weekNumber: Int,
+    val phase: String?,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val plannedKm: Double?,
+    val plannedVertM: Int?,
+    val notes: String?
+)
+
 data class WeeklyBlockDto(
     val id: Long,
     val weekNumber: Int,

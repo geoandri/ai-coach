@@ -2,7 +2,9 @@ package com.aicoach.service
 
 import com.aicoach.domain.dto.DailyWorkoutDto
 import com.aicoach.domain.dto.TrainingPlanDto
+import com.aicoach.domain.dto.TrainingPlanSummaryDto
 import com.aicoach.domain.dto.WeeklyBlockDto
+import com.aicoach.domain.dto.WeeklyBlockSummaryDto
 import com.aicoach.domain.dto.CreateTrainingPlanRequest
 import com.aicoach.domain.entity.DailyWorkout
 import com.aicoach.domain.entity.TrainingPlan
@@ -60,6 +62,22 @@ class TrainingPlanService(
             tuneUpRaceDate = plan.tuneUpRaceDate,
             totalWeeks = plan.totalWeeks,
             weeks = weeks.map { it.toDto() }
+        )
+    }
+
+    fun getPlanSummaryForAthlete(athleteId: Long): TrainingPlanSummaryDto? {
+        val plan = planRepository.findByAthleteId(athleteId).orElse(null) ?: return null
+        val weeks = weeklyBlockRepository.findByTrainingPlanIdOrderByWeekNumberAsc(plan.id)
+        return TrainingPlanSummaryDto(
+            id = plan.id,
+            athleteId = athleteId,
+            name = plan.name,
+            raceName = plan.raceName,
+            raceDate = plan.raceDate,
+            tuneUpRaceName = plan.tuneUpRaceName,
+            tuneUpRaceDate = plan.tuneUpRaceDate,
+            totalWeeks = plan.totalWeeks,
+            weeks = weeks.map { it.toSummaryDto() }
         )
     }
 
@@ -149,6 +167,17 @@ class TrainingPlanService(
             workouts = workouts.map { it.toDto() }
         )
     }
+
+    private fun WeeklyBlock.toSummaryDto() = WeeklyBlockSummaryDto(
+        id = id,
+        weekNumber = weekNumber,
+        phase = phase,
+        startDate = startDate,
+        endDate = endDate,
+        plannedKm = plannedKm,
+        plannedVertM = plannedVertM,
+        notes = notes
+    )
 
     private fun DailyWorkout.toDto() = DailyWorkoutDto(
         id = id,

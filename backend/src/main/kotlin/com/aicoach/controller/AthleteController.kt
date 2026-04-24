@@ -58,6 +58,13 @@ class AthleteController(
         return ResponseEntity.ok(plan)
     }
 
+    @GetMapping("/{id}/training-plan/summary")
+    fun getPlanSummary(@PathVariable id: Long): ResponseEntity<TrainingPlanSummaryDto> {
+        val plan = trainingPlanService.getPlanSummaryForAthlete(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(plan)
+    }
+
     @DeleteMapping("/{id}/training-plans/{planId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletePlan(@PathVariable id: Long, @PathVariable planId: Long) =

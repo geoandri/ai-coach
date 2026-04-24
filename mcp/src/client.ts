@@ -77,6 +77,17 @@ export interface WeeklyBlock {
   workouts: DailyWorkout[]
 }
 
+export interface WeeklyBlockSummary {
+  id?: number
+  weekNumber: number
+  phase?: string
+  startDate: string
+  endDate: string
+  plannedKm?: number
+  plannedVertM?: number
+  notes?: string
+}
+
 export interface TrainingPlan {
   id: number
   athleteId: number
@@ -87,6 +98,18 @@ export interface TrainingPlan {
   tuneUpRaceName?: string
   tuneUpRaceDate?: string
   weeks: WeeklyBlock[]
+}
+
+export interface TrainingPlanSummary {
+  id: number
+  athleteId: number
+  name: string
+  totalWeeks: number
+  raceDate?: string
+  raceName?: string
+  tuneUpRaceName?: string
+  tuneUpRaceDate?: string
+  weeks: WeeklyBlockSummary[]
 }
 
 export interface CreateTrainingPlanRequest {
@@ -178,6 +201,16 @@ export class AiCoachClient {
   async getTrainingPlan(athleteId: number): Promise<TrainingPlan | null> {
     try {
       const { data } = await this.http.get<TrainingPlan>(`/athletes/${athleteId}/training-plan`)
+      return data
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) return null
+      throw e
+    }
+  }
+
+  async getTrainingPlanSummary(athleteId: number): Promise<TrainingPlanSummary | null> {
+    try {
+      const { data } = await this.http.get<TrainingPlanSummary>(`/athletes/${athleteId}/training-plan/summary`)
       return data
     } catch (e: unknown) {
       if (axios.isAxiosError(e) && e.response?.status === 404) return null

@@ -26,7 +26,7 @@ const WeeklyBlockSchema = z.object({
 export const planTools = [
   {
     name: 'get_training_plan',
-    description: 'Get the training plan for an athlete including all weeks and daily workouts.',
+    description: 'Get a summary of the training plan for an athlete: plan metadata and one row per week (phase, dates, planned km/vert) without individual workouts. Use get_week_detail to fetch daily workouts for a specific week.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -160,7 +160,7 @@ export async function handlePlanTool(
   switch (name) {
     case 'get_training_plan': {
       const { athleteId } = GetPlanSchema.parse(args)
-      const plan = await client.getTrainingPlan(athleteId)
+      const plan = await client.getTrainingPlanSummary(athleteId)
       if (!plan) {
         return { content: text({ message: `No training plan found for athlete ${athleteId}` }) }
       }
