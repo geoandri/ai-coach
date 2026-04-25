@@ -69,7 +69,7 @@ export function WeekAccordion({ week, isCurrentWeek = false }: Props) {
           <span className="text-xs text-gray-500">{week.startDate} – {week.endDate}</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">{week.plannedKm}km / +{week.plannedVertM}m</span>
+          <span className="text-sm text-gray-400">{week.plannedKm}km / +{week.workouts.reduce((sum, w) => sum + (w.plannedVertM ?? 0), 0)}m</span>
           <span className="text-gray-500 text-lg">{open ? '▲' : '▼'}</span>
         </div>
       </button>
