@@ -77,6 +77,13 @@ class AthleteController(
         return ResponseEntity.ok(week)
     }
 
+    @PatchMapping("/{id}/training-plan/weeks/{weekNumber}")
+    fun updateWeek(
+        @PathVariable id: Long,
+        @PathVariable weekNumber: Int,
+        @RequestBody request: UpdateWeekRequest
+    ): WeeklyBlockDto = trainingPlanService.updateWeekForAthlete(id, weekNumber, request)
+
     // ── PDF Export ───────────────────────────────────────────────────────────
     @GetMapping("/{id}/training-plans/{planId}/export/pdf/quick")
     fun exportQuickPdf(@PathVariable id: Long, @PathVariable planId: Long): ResponseEntity<ByteArray> {

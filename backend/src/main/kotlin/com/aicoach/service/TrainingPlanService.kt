@@ -6,6 +6,7 @@ import com.aicoach.domain.dto.TrainingPlanSummaryDto
 import com.aicoach.domain.dto.WeeklyBlockDto
 import com.aicoach.domain.dto.WeeklyBlockSummaryDto
 import com.aicoach.domain.dto.CreateTrainingPlanRequest
+import com.aicoach.domain.dto.UpdateWeekRequest
 import com.aicoach.domain.entity.DailyWorkout
 import com.aicoach.domain.entity.TrainingPlan
 import com.aicoach.domain.entity.WeeklyBlock
@@ -141,6 +142,50 @@ class TrainingPlanService(
             }
         }
         return getPlanForAthlete(athleteId)!!
+    }
+
+    @Transactional
+    fun updateWeekForAthlete(athleteId: Long, weekNumber: Int, request: UpdateWeekRequest): WeeklyBlockDto {
+        val plan = planRepository.findByAthleteId(athleteId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "No training plan found for athlete $athleteId")
+        }
+        val existing = weeklyBlockRepository.findByTrainingPlanIdAndWeekNumber(plan.id, weekNumber).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Week $weekNumber not found")
+        }
+        val updated = WeeklyBlock(
+            id = existing.id,
+            trainingPlan = existing.trainingPlan,
+            weekNumber = existing.weekNumber,
+            phase = if (request.phase != null) request.phase else existing.phase,
+            startDate = existing.startDate,
+            endDate = existing.endDate,
+            plannedKm = if (request.plannedKm != null) request.plannedKm else existing.plannedKm,
+            plannedVertM = if (request.plannedVertM != null) request.plannedVertM else existing.plannedVertM,
+            notes = if (request.notes != null) request.notes else existing.notes
+        )
+        weeklyBlockRepository.save(updated)
+        if (request.workouts != null) {
+            val existingWorkouts = dailyWorkoutRepository.findByWeeklyBlockIdOrderByWorkoutDateAsc(existing.id)
+                .associateBy { it.workoutDate }
+            for (workoutReq in request.workouts) {
+                val existingWorkout = existingWorkouts[workoutReq.workoutDate]
+                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No workout on ${workoutReq.workoutDate} in week $weekNumber")
+                val updatedWorkout = DailyWorkout(
+                    id = existingWorkout.id,
+                    weeklyBlock = updated,
+                    workoutDate = existingWorkout.workoutDate,
+                    dayOfWeek = if (workoutReq.dayOfWeek != null) workoutReq.dayOfWeek else existingWorkout.dayOfWeek,
+                    workoutType = if (workoutReq.workoutType != null) workoutReq.workoutType else existingWorkout.workoutType,
+                    description = if (workoutReq.description != null) workoutReq.description else existingWorkout.description,
+                    plannedKm = if (workoutReq.plannedKm != null) workoutReq.plannedKm else existingWorkout.plannedKm,
+                    plannedVertM = if (workoutReq.plannedVertM != null) workoutReq.plannedVertM else existingWorkout.plannedVertM,
+                    isRestDay = workoutReq.isRestDay ?: existingWorkout.isRestDay,
+                    isRaceDay = workoutReq.isRaceDay ?: existingWorkout.isRaceDay
+                )
+                dailyWorkoutRepository.save(updatedWorkout)
+            }
+        }
+        return getWeekForAthlete(athleteId, weekNumber)!!
     }
 
     @Transactional

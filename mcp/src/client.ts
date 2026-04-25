@@ -162,6 +162,23 @@ export interface SyncResultDto {
   message: string
 }
 
+export interface UpdateWeekRequest {
+  phase?: string
+  plannedKm?: number
+  plannedVertM?: number
+  notes?: string
+  workouts?: Array<{
+    workoutDate: string
+    dayOfWeek?: string
+    workoutType?: string
+    description?: string
+    plannedKm?: number
+    plannedVertM?: number
+    isRestDay?: boolean
+    isRaceDay?: boolean
+  }>
+}
+
 export class AiCoachClient {
   private http: AxiosInstance
   private publicBaseUrl: string
@@ -235,6 +252,11 @@ export class AiCoachClient {
       if (axios.isAxiosError(e) && e.response?.status === 404) return null
       throw e
     }
+  }
+
+  async updateWeek(athleteId: number, weekNumber: number, request: UpdateWeekRequest): Promise<WeeklyBlock> {
+    const { data } = await this.http.patch<WeeklyBlock>(`/athletes/${athleteId}/training-plan/weeks/${weekNumber}`, request)
+    return data
   }
 
   // Plan vs Actual

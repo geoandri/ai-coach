@@ -92,3 +92,22 @@ data class CreateDailyWorkoutRequest(
     val isRestDay: Boolean = false,
     val isRaceDay: Boolean = false
 )
+
+data class UpdateWeekRequest(
+    val phase: String? = null,
+    val plannedKm: Double? = null,
+    val plannedVertM: Int? = null,
+    val notes: String? = null,
+    val workouts: List<UpdateDailyWorkoutRequest>? = null
+)
+
+data class UpdateDailyWorkoutRequest(
+    val workoutDate: java.time.LocalDate,
+    val dayOfWeek: String? = null,
+    val workoutType: String? = null,
+    val description: String? = null,
+    val plannedKm: Double? = null,
+    val plannedVertM: Int? = null,
+    val isRestDay: Boolean? = null,
+    val isRaceDay: Boolean? = null
+)
