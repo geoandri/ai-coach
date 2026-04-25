@@ -186,6 +186,8 @@ const UpdateWeekSchema = z.object({
     isRaceDay: z.boolean().optional()
   })).optional()
 })
+
+export async function handlePlanTool(
   name: string,
   args: unknown,
   client: AiCoachClient
