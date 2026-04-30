@@ -53,7 +53,8 @@ export default function LandingPage() {
           <Code>{`{
   "mcpServers": {
     "ai-coach": {
-      "url": "http://localhost:3001/mcp"
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:3001/mcp"]
     }
   }
 }`}</Code>
@@ -71,10 +72,12 @@ export default function LandingPage() {
           </p>
           <div className="space-y-2">
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
-              <p className="text-white text-xs font-semibold mb-1">Claude Desktop</p>
-              <p className="text-gray-400 text-xs">
-                Type <code className="text-orange-400">@ai-coach</code> in a new conversation and select a persona from the dropdown.
-              </p>
+              <p className="text-white text-xs font-semibold mb-2">Claude Desktop</p>
+              <ol className="text-gray-400 text-xs space-y-1.5 list-none">
+                <li><span className="text-orange-400 font-medium">1.</span> Start a new conversation</li>
+                <li><span className="text-orange-400 font-medium">2.</span> Click the <span className="text-white font-medium">Add from AI Coach</span> option in the connector menu (the plug icon near the message input)</li>
+                <li><span className="text-orange-400 font-medium">3.</span> Choose a coach persona from the list (e.g. <code className="text-orange-400">trail-running-coach</code>)</li>
+              </ol>
             </div>
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
               <p className="text-white text-xs font-semibold mb-1">Claude Code</p>

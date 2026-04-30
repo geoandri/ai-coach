@@ -2,6 +2,7 @@ import { useAthletes } from '../hooks/useAthletes'
 import { useNavigate } from 'react-router-dom'
 import { Athlete } from '../types/athlete'
 
+
 function fitnessLevelColor(level?: string) {
   switch (level) {
     case 'ELITE': return 'text-purple-400'
@@ -90,20 +91,13 @@ function AthleteCard({ athlete }: { athlete: Athlete }) {
 
 export default function AthletesPage() {
   const { data: athletes, loading, error } = useAthletes()
-  const navigate = useNavigate()
 
   if (loading) return <div className="text-gray-400 text-center py-20">Loading athletes...</div>
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold">Athletes</h1>
-        <button
-          onClick={() => navigate('/athletes/new')}
-          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-lg transition-colors"
-        >
-          + New Athlete
-        </button>
       </div>
 
       {error && (
@@ -117,8 +111,7 @@ export default function AthletesPage() {
         <div className="text-center py-20">
           <p className="text-gray-400 mb-4">No athletes yet.</p>
           <p className="text-gray-500 text-sm">
-            Create athletes using the AI coaching agent via Claude with the ai-coach MCP server,
-            or click "+ New Athlete" for instructions.
+            Start a conversation with your AI coach in Claude to create your first athlete profile.
           </p>
         </div>
       )}
