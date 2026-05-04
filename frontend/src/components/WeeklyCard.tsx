@@ -4,20 +4,15 @@ interface Props {
   week: WeekAdherence
 }
 
-const phaseColors: Record<string, string> = {
-  'Base Building': 'bg-blue-900 border-blue-700',
-  'Base Building (Peak Base)': 'bg-blue-900 border-blue-700',
-  'Recovery Week': 'bg-green-900 border-green-700',
-  'Evrytania Pre-Taper': 'bg-yellow-900 border-yellow-700',
-  'Evrytania Taper': 'bg-yellow-900 border-yellow-700',
-  'Evrytania Race Week': 'bg-red-900 border-red-700',
-  'Post-Race Recovery': 'bg-green-900 border-green-700',
-  'Build Phase': 'bg-purple-900 border-purple-700',
-  'Build Peak': 'bg-orange-900 border-orange-700',
-  'Build (Controlled Descent)': 'bg-purple-900 border-purple-700',
-  'Taper Week 1': 'bg-yellow-900 border-yellow-700',
-  'Race Week': 'bg-red-900 border-red-700',
-  'Partial Week': 'bg-gray-800 border-gray-600',
+function phaseColor(phase: string | undefined): string {
+  const p = (phase ?? '').toLowerCase()
+  if (p.includes('race') && !p.includes('pre') && !p.includes('post')) return 'bg-red-900 border-red-700'
+  if (p.includes('taper') || p.includes('pre-taper') || p.includes('pre taper')) return 'bg-yellow-900 border-yellow-700'
+  if (p.includes('recovery') || p.includes('post-race') || p.includes('post race')) return 'bg-green-900 border-green-700'
+  if (p.includes('peak')) return 'bg-orange-900 border-orange-700'
+  if (p.includes('build')) return 'bg-purple-900 border-purple-700'
+  if (p.includes('base')) return 'bg-blue-900 border-blue-700'
+  return 'bg-gray-800 border-gray-600'
 }
 
 function formatDate(d: string) {
@@ -25,7 +20,7 @@ function formatDate(d: string) {
 }
 
 export function WeeklyCard({ week }: Props) {
-  const colorClass = phaseColors[week.phase ?? ''] ?? 'bg-gray-800 border-gray-600'
+  const colorClass = phaseColor(week.phase)
   const adherencePct = Math.min(week.adherencePercent, 100)
   const barColor = adherencePct >= 90 ? 'bg-green-500' : adherencePct >= 70 ? 'bg-yellow-500' : 'bg-red-500'
 
