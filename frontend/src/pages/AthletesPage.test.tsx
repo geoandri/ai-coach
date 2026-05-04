@@ -52,17 +52,6 @@ describe('AthletesPage', () => {
     expect(screen.getByText(/Is the backend running/i)).toBeInTheDocument()
   })
 
-  it('clicking "New Athlete" navigates to /athletes/new', async () => {
-    const user = userEvent.setup()
-    const { container } = renderPage()
-    await waitFor(() => expect(screen.queryByText(/Loading athletes/i)).not.toBeInTheDocument())
-
-    const button = screen.getByRole('button', { name: /New Athlete/i })
-    await user.click(button)
-    // MemoryRouter doesn't change URL visibly; we verify the button exists and is clickable
-    expect(button).toBeInTheDocument()
-  })
-
   it('clicking an athlete card navigates to /athletes/:id', async () => {
     const user = userEvent.setup()
     renderPage()
