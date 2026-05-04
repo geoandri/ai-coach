@@ -4,7 +4,7 @@ interface Props {
   week: WeekAdherence
 }
 
-function phaseColor(phase: string | undefined): string {
+function phaseColor(phase: string | null | undefined): string {
   const p = (phase ?? '').toLowerCase()
   if (p.includes('race') && !p.includes('pre') && !p.includes('post')) return 'bg-red-900 border-red-700'
   if (p.includes('taper') || p.includes('pre-taper') || p.includes('pre taper')) return 'bg-yellow-900 border-yellow-700'
