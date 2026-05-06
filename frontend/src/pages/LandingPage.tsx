@@ -31,8 +31,10 @@ export default function LandingPage() {
         <h1 className="text-3xl font-bold text-white mb-3">Welcome to AI Coach</h1>
         <p className="text-gray-400 text-base leading-relaxed">
           AI Coach is a platform where an AI agent acts as a personal coach. It interviews athletes,
-          pulls their training history from Strava, generates periodized training plans, and tracks
-          week-by-week adherence. The AI runs entirely in Claude — this UI is the coaching dashboard.
+          generates periodized training plans, and tracks week-by-week adherence. The AI runs
+          entirely in Claude — this UI is the coaching dashboard. Strava integration is optional —
+          it lets the coach import your training history automatically, but the app works fully
+          without it.
         </p>
       </div>
 
@@ -96,7 +98,8 @@ export default function LandingPage() {
           <p className="text-gray-400 text-sm">
             Claude will ask for the athlete's name, load their profile if one exists, and guide the
             session from there. New athletes are created through the conversation; their profiles and
-            training plans appear here automatically.
+            training plans appear here automatically. If Strava is connected the coach will import
+            your training history automatically — otherwise it will ask a few questions instead.
           </p>
           <NavLink
             to="/athletes"
