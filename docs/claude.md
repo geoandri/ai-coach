@@ -4,9 +4,8 @@ AI-assisted coaching platform. An AI agent acts as a personal coach: gathers ath
 
 For platform-level agent behaviour (MCP rules, tool usage, check-in workflow) see @docs/personas/_base.md.
 For the trail running coach persona see @docs/personas/trail-running-coach.md.
+For the road running coach persona see @docs/personas/road-running-coach.md.
 For adding a new coach persona see @docs/personas/_template.md.
-For platform setup and schemas see @PLATFORM.md.
-For Strava integration setup see @SETUP.md.
 
 ---
 
@@ -14,7 +13,7 @@ For Strava integration setup see @SETUP.md.
 
 | Layer | Technology |
 |---|---|
-| Backend | Spring Boot 3.3.4 (Kotlin), PostgreSQL 16, Liquibase |
+| Backend | Node.js / TypeScript, Fastify, SQLite (sql.js) |
 | Frontend | React 18 (TypeScript), Vite, Tailwind CSS |
 | MCP Server | TypeScript, `@modelcontextprotocol/sdk` |
 
@@ -23,12 +22,18 @@ For Strava integration setup see @SETUP.md.
 ## Key Commands
 
 ```bash
-# Start full stack (backend, frontend, MCP server, database)
-docker compose -f docker-compose.prod.yml up -d
+# Build and start (from server/)
+npm run build
+node dist/index.js
 ```
 
-- UI: `http://localhost`
+- UI: `http://localhost:3000`
 - MCP server: `http://localhost:3001/mcp`
+
+```bash
+# Dev mode with hot reload (from server/)
+npm run dev
+```
 
 ---
 
@@ -36,32 +41,28 @@ docker compose -f docker-compose.prod.yml up -d
 
 ```
 frontend/        React SPA — athlete profiles, training plans, activity dashboard
-backend/         Spring Boot REST API — business logic, DB, Strava OAuth + sync
+server/          Fastify REST API — business logic, SQLite DB, Strava OAuth + sync
 mcp/             MCP server — wraps backend API as tools for AI agents
+docs/personas/   Coach persona prompts loaded by MCP server at startup
 ```
 
-The MCP server uses **Streamable HTTP transport** (port 3001). It exposes tools dynamically — no static tool configuration needed. Agents discover tools at runtime via `tools/list`.
+The server serves the React frontend as static files and exposes the REST API under `/api`.
+The MCP server starts as a child process of the server, on port 3001.
+The MCP server uses **Streamable HTTP transport**. Agents discover tools at runtime via `tools/list`.
 
 ---
 
 ## Environment Variables
 
-**Backend** (`backend/src/main/resources/application.yml`):
-
 | Variable | Default | Notes |
 |---|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/ai_coach` | |
-| `SPRING_DATASOURCE_USERNAME` | `ai_coach_user` | |
-| `SPRING_DATASOURCE_PASSWORD` | `ai_coach_pass` | |
+| `PORT` | `3000` | Web server port |
+| `MCP_PORT` | `3001` | MCP server port |
+| `DATABASE_PATH` | `./data/ai_coach.db` | SQLite file location |
 | `STRAVA_CLIENT_ID` | — | Required for Strava OAuth |
 | `STRAVA_CLIENT_SECRET` | — | Required for Strava OAuth |
-| `STRAVA_REDIRECT_URI` | `http://localhost/api/auth/strava/callback` | Optional override |
-
-**MCP server:**
-
-| Variable | Default |
-|---|---|
-| `BACKEND_URL` | `http://localhost:8080/api` |
+| `STRAVA_REDIRECT_URI` | `http://localhost:3000/api/auth/strava/callback` | OAuth callback |
+| `FRONTEND_BASE_URL` | `http://localhost:3000` | Post-OAuth redirect base |
 
 ---
 
@@ -79,10 +80,10 @@ One plan per athlete. Delete existing plan before creating a replacement.
 ## Strava Integration
 
 - OAuth 2.0 flow; scopes: `read, activity:read_all`
-- Athlete connects at `/athletes/:id/settings`
+- Athlete connects via `/api/athletes/:id/auth/strava`
 - Activities filtered to `Run` and `TrailRun` types
 - Tokens auto-refresh (5-minute expiry buffer)
-- Sync via UI, `GET /api/athletes/{id}/activities/sync`, or MCP `sync_activities` tool
+- Sync via UI, `GET /api/athletes/:id/activities/sync`, or MCP `sync_activities` tool
 
 ---
 
@@ -103,7 +104,8 @@ Strava & adherence: `sync_activities`, `get_strava_connect_url`, `get_dashboard_
 {
   "mcpServers": {
     "ai-coach": {
-      "url": "http://localhost:3001/mcp"
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:3001/mcp"]
     }
   }
 }
@@ -118,9 +120,8 @@ claude mcp add --transport http ai-coach http://localhost:3001/mcp
 
 ## Conventions
 
-- Kotlin package: `com.aicoach`
-- DB migrations: Liquibase XML in `backend/src/main/resources/db/changelog/`
-- Frontend API calls: `frontend/src/api/` (axios-based)
+- All dates as ISO strings: `YYYY-MM-DD`
+- Frontend API calls via axios with `baseURL: '/api'`
 - Workout effort levels: `EASY | MODERATE | HARD | VERY_HARD`
 - Fitness levels: `BEGINNER | INTERMEDIATE | ADVANCED | ELITE`
 - Goal types: `FINISH_COMFORTABLY | TARGET_TIME | PODIUM`
