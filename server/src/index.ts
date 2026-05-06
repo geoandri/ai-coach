@@ -34,7 +34,18 @@ async function main() {
 
     const mcp = spawn(process.execPath, [mcpPath], {
       env: mcpEnv,
-      stdio: 'inherit',
+      stdio: ['ignore', 'inherit', 'pipe'],
+    })
+
+    // Wait for the MCP process to confirm it is listening before we log ready
+    let mcpReady = false
+    mcp.stderr!.on('data', (chunk: Buffer) => {
+      const line = chunk.toString()
+      process.stderr.write(line)
+      if (!mcpReady && line.includes('listening')) {
+        mcpReady = true
+        console.log(`MCP server ready on port ${MCP_PORT}`)
+      }
     })
 
     mcp.on('error', (err) => {
