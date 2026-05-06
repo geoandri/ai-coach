@@ -1,0 +1,163 @@
+import axios from 'axios'
+import { db } from '../db/client.js'
+import { stravaTokens, athletes } from '../db/schema.js'
+import { eq } from 'drizzle-orm'
+
+const CLIENT_ID = process.env.STRAVA_CLIENT_ID ?? ''
+const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET ?? ''
+const REDIRECT_URI =
+  process.env.STRAVA_REDIRECT_URI ?? 'http://localhost:3000/api/auth/strava/callback'
+const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize'
+const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
+
+export function buildAuthorizationUrl(internalAthleteId?: number): string {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'code',
+    approval_prompt: 'auto',
+    scope: 'read,activity:read_all',
+  })
+  if (internalAthleteId !== undefined) {
+    params.set('state', String(internalAthleteId))
+  }
+  return `${STRAVA_AUTH_URL}?${params.toString()}`
+}
+
+export async function exchangeCodeForToken(code: string): Promise<{
+  athleteId: number
+  accessToken: string
+  refreshToken: string
+  expiresAt: number
+  scope: string | null
+}> {
+  const response = await axios.post(STRAVA_TOKEN_URL, new URLSearchParams({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    code,
+    grant_type: 'authorization_code',
+  }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+
+  const data = response.data as Record<string, unknown>
+  return upsertToken(data)
+}
+
+async function refreshTokenRow(token: typeof stravaTokens.$inferSelect): Promise<typeof stravaTokens.$inferSelect> {
+  const response = await axios.post(STRAVA_TOKEN_URL, new URLSearchParams({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    refresh_token: token.refreshToken,
+    grant_type: 'refresh_token',
+  }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+
+  const data = response.data as Record<string, unknown>
+  const now = new Date().toISOString()
+  const updated = db
+    .update(stravaTokens)
+    .set({
+      accessToken: data.access_token as string,
+      refreshToken: (data.refresh_token as string | undefined) ?? token.refreshToken,
+      expiresAt: (data.expires_at as number),
+      updatedAt: now,
+    })
+    .where(eq(stravaTokens.id, token.id))
+    .returning()
+    .get()
+  return updated
+}
+
+function isExpired(token: typeof stravaTokens.$inferSelect): boolean {
+  return token.expiresAt - 300 < Date.now() / 1000
+}
+
+export async function getValidToken(): Promise<typeof stravaTokens.$inferSelect | null> {
+  const token = db.select().from(stravaTokens).all().sort((a, b) => a.id - b.id)[0]
+  if (!token) return null
+  return isExpired(token) ? refreshTokenRow(token) : token
+}
+
+export function hasToken(): boolean {
+  return db.select().from(stravaTokens).all().length > 0
+}
+
+export async function getValidTokenForAthlete(
+  internalAthleteId: number
+): Promise<typeof stravaTokens.$inferSelect | null> {
+  const token = db
+    .select()
+    .from(stravaTokens)
+    .where(eq(stravaTokens.internalAthleteId, internalAthleteId))
+    .get()
+  if (!token) return null
+  return isExpired(token) ? refreshTokenRow(token) : token
+}
+
+export function hasTokenForAthlete(internalAthleteId: number): boolean {
+  const token = db
+    .select()
+    .from(stravaTokens)
+    .where(eq(stravaTokens.internalAthleteId, internalAthleteId))
+    .get()
+  return token != null
+}
+
+function upsertToken(data: Record<string, unknown>): {
+  athleteId: number
+  accessToken: string
+  refreshToken: string
+  expiresAt: number
+  scope: string | null
+} {
+  const athlete = data.athlete as Record<string, unknown> | undefined
+  const stravaAthleteId = Number((athlete?.id as number | undefined) ?? 0)
+  if (!stravaAthleteId) throw new Error('No athlete id in Strava response')
+
+  const accessToken = data.access_token as string
+  const refreshToken = data.refresh_token as string
+  const expiresAt = data.expires_at as number
+  const scope = (data.scope as string | undefined) ?? null
+  const now = new Date().toISOString()
+
+  const existing = db
+    .select()
+    .from(stravaTokens)
+    .where(eq(stravaTokens.athleteId, stravaAthleteId))
+    .get()
+
+  if (existing) {
+    db.update(stravaTokens)
+      .set({ accessToken, refreshToken, expiresAt, scope, internalAthleteId: null, updatedAt: now })
+      .where(eq(stravaTokens.id, existing.id))
+      .run()
+  } else {
+    db.insert(stravaTokens).values({
+      athleteId: stravaAthleteId,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      scope,
+      createdAt: now,
+      updatedAt: now,
+    }).run()
+  }
+
+  return { athleteId: stravaAthleteId, accessToken, refreshToken, expiresAt, scope }
+}
+
+export function linkTokenToAthlete(stravaAthleteId: number, internalAthleteId: number) {
+  const token = db
+    .select()
+    .from(stravaTokens)
+    .where(eq(stravaTokens.athleteId, stravaAthleteId))
+    .get()
+  if (!token) return
+
+  // Also verify the athlete exists
+  const athlete = db.select().from(athletes).where(eq(athletes.id, internalAthleteId)).get()
+  if (!athlete) return
+
+  db.update(stravaTokens)
+    .set({ internalAthleteId, updatedAt: new Date().toISOString() })
+    .where(eq(stravaTokens.id, token.id))
+    .run()
+}

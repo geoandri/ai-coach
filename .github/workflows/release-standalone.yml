@@ -1,0 +1,131 @@
+name: Release Standalone
+
+on:
+  push:
+    branches:
+      - node-standalone
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            mcp/package-lock.json
+            server/package-lock.json
+
+      # ── Build frontend ────────────────────────────────────────────────────
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      # ── Build MCP ─────────────────────────────────────────────────────────
+      - name: Build MCP
+        working-directory: mcp
+        run: |
+          npm ci
+          npm run build
+
+      # ── Build server ──────────────────────────────────────────────────────
+      - name: Build server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      # ── Install server prod deps only ─────────────────────────────────────
+      - name: Install server production dependencies
+        working-directory: server
+        run: npm ci --omit=dev
+
+      # ── Install MCP prod deps only ────────────────────────────────────────
+      - name: Install MCP production dependencies
+        working-directory: mcp
+        run: npm ci --omit=dev
+
+      # ── Assemble tarball ──────────────────────────────────────────────────
+      - name: Assemble release directory
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          RELEASE_DIR="ai-coach-standalone"
+
+          mkdir -p "${RELEASE_DIR}/mcp"
+
+          # Server compiled JS
+          cp -r server/dist "${RELEASE_DIR}/dist"
+
+          # Server prod node_modules
+          cp -r server/node_modules "${RELEASE_DIR}/node_modules"
+
+          # Server package.json (needed for "type": "module")
+          cp server/package.json "${RELEASE_DIR}/package.json"
+
+          # Frontend static files
+          cp -r frontend/dist "${RELEASE_DIR}/public"
+
+          # MCP compiled JS + prod deps
+          cp -r mcp/dist "${RELEASE_DIR}/mcp/dist"
+          cp -r mcp/node_modules "${RELEASE_DIR}/mcp/node_modules"
+          cp mcp/package.json "${RELEASE_DIR}/mcp/package.json"
+
+          # Personas
+          mkdir -p "${RELEASE_DIR}/personas"
+          if [ -d docs/personas ]; then
+            cp -r docs/personas/. "${RELEASE_DIR}/personas/"
+          fi
+
+          # Env example
+          cp server/.env.example "${RELEASE_DIR}/.env.example"
+
+          # README stub
+          cat > "${RELEASE_DIR}/README.md" <<'EOF'
+          # AI Coach Standalone
+
+          ## Quick Start
+
+          1. Copy `.env.example` to `.env` and fill in your Strava credentials.
+          2. Create the data directory: `mkdir -p data`
+          3. Start the server: `node dist/index.js`
+          4. Open http://localhost:3000
+
+          ## Environment Variables
+
+          See `.env.example` for all available options.
+
+          ## Data
+
+          SQLite database is stored at `./data/ai_coach.db` by default.
+          Change with `DATABASE_PATH` env var.
+          EOF
+
+          tar -czf "ai-coach-standalone-${TAG}.tar.gz" "${RELEASE_DIR}/"
+
+      # ── Upload artifact on every push (CI) ───────────────────────────────
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-coach-standalone
+          path: ai-coach-standalone-*.tar.gz
+          retention-days: 7
+
+      # ── Create GitHub Release on tag push ─────────────────────────────────
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softproj/action-gh-release@v2
+        with:
+          files: ai-coach-standalone-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
