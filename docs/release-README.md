@@ -48,12 +48,12 @@ The other values (`PORT`, `DATABASE_PATH`, etc.) can be left as defaults.
 
 **macOS / Linux**
 ```bash
-node dist/index.js
+node --env-file=.env dist/index.js
 ```
 
 **Windows (Command Prompt / PowerShell)**
 ```cmd
-node dist\index.js
+node --env-file=.env dist\index.js
 ```
 
 Open http://localhost:3000. The coaching dashboard and MCP server start together.
@@ -94,7 +94,7 @@ claude mcp add --transport http ai-coach http://localhost:3001/mcp
 
 ## Starting a coaching session
 
-1. Start the app (`node dist/index.js`)
+1. Start the app (`node --env-file=.env dist/index.js`)
 2. Open a new conversation in Claude Desktop or Claude Code
 3. Select a coach persona from the AI Coach connector (plug icon) — e.g. `trail-running-coach`
 4. Claude will guide the session from there

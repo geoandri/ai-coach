@@ -24,7 +24,7 @@ For adding a new coach persona see @docs/personas/_template.md.
 ```bash
 # Build and start (from server/)
 npm run build
-node dist/index.js
+node --env-file=.env dist/index.js
 ```
 
 - UI: `http://localhost:3000`
