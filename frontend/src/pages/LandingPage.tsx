@@ -42,9 +42,9 @@ export default function LandingPage() {
 
         <Step number={1} title="Configure the MCP server">
           <p className="text-gray-400 text-sm">
-            The MCP server runs as part of the Docker stack and is reachable at{' '}
+            The MCP server starts automatically alongside the app and is reachable at{' '}
             <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
-            Add it to your Claude Desktop config at{' '}
+            Add the following to{' '}
             <code className="text-orange-400 text-xs">
               ~/Library/Application Support/Claude/claude_desktop_config.json
             </code>
@@ -58,9 +58,12 @@ export default function LandingPage() {
     }
   }
 }`}</Code>
+          <p className="text-gray-400 text-sm mt-3">
+            For Claude Code, run once:
+          </p>
+          <Code>{`claude mcp add --transport http ai-coach http://localhost:3001/mcp`}</Code>
           <p className="text-gray-500 text-xs mt-2">
-            For Claude Code:{' '}
-            <code className="text-orange-400">claude mcp add --transport http ai-coach http://localhost:3001/mcp</code>
+            Make sure the app is running before starting a coaching session.
           </p>
         </Step>
 

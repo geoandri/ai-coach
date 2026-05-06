@@ -1,28 +1,21 @@
-# AI Coach
+# AI Coach Standalone
 
-A personalised AI coaching platform that supports multiple coach personas. An AI agent acts as a personal coach: it interviews the athlete, pulls their Strava history, generates a periodized training plan, and tracks week-by-week adherence.
-
----
+AI Coach is a personal coaching platform where an AI agent interviews athletes, pulls training
+history from Strava, generates periodized training plans, and tracks week-by-week adherence.
+The AI runs in Claude via MCP — this package contains the backend server and coaching dashboard.
 
 ## Requirements
 
 Node.js 18 or later. No native dependencies — works on macOS, Linux, and Windows.
 
----
-
-## Download
-
-Download the latest release from the [Releases](../../releases) page and extract it.
-
----
-
 ## Setup
 
 ### 1. Create a Strava API application
 
-1. Go to https://www.strava.com/settings/api and create an application
-2. Set **Authorization Callback Domain** to `localhost`
-3. Note your **Client ID** and **Client Secret**
+1. Go to https://www.strava.com/settings/api
+2. Create a new application
+3. Set **Authorization Callback Domain** to `localhost`
+4. Note your **Client ID** and **Client Secret**
 
 ### 2. Configure environment variables
 
@@ -66,8 +59,6 @@ node --env-file=.env dist\index.js
 Open http://localhost:3000. The coaching dashboard and MCP server start together.
 The MCP server is reachable at http://localhost:3001/mcp.
 
----
-
 ## MCP Setup
 
 The MCP server starts automatically alongside the app — you do not need to configure a path
@@ -101,8 +92,6 @@ Run once (from any directory):
 claude mcp add --transport http ai-coach http://localhost:3001/mcp
 ```
 
----
-
 ## Starting a coaching session
 
 1. Start the app (`node --env-file=.env dist/index.js`)
@@ -110,14 +99,10 @@ claude mcp add --transport http ai-coach http://localhost:3001/mcp
 3. Select a coach persona from the AI Coach connector (plug icon) — e.g. `trail-running-coach`
 4. Claude will guide the session from there
 
----
-
 ## Data
 
 The SQLite database is stored at `./data/ai_coach.db` by default.
 To use a different location set the `DATABASE_PATH` environment variable in `.env`.
-
----
 
 ## All environment variables
 
