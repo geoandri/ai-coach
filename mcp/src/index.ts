@@ -24,7 +24,7 @@ const client = new AiCoachClient(backendUrl, publicUrl)
 
 // Load coach persona prompts from docs/personas/ at startup.
 // Files starting with _ (e.g. _base.md, _template.md) are skipped.
-const personasDir = join(__dirname, '..', 'personas')
+const personasDir = join(__dirname, '..', '..', 'docs', 'personas')
 
 interface CoachPrompt {
   name: string
