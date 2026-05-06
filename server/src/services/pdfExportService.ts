@@ -27,19 +27,19 @@ function getPhaseColor(phase: string | null): string {
   return '#f5f5f5'
 }
 
-export function generateQuickReferencePdf(athleteId: number, planId: number): Buffer | null {
-  const plan = db
+export async function generateQuickReferencePdf(athleteId: number, planId: number): Promise<Buffer | null> {
+  const plan = await db
     .select()
     .from(trainingPlans)
     .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
     .get()
   if (!plan) return null
 
-  const weeks = db
+  const weeks = (await db
     .select()
     .from(weeklyBlocks)
     .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all()
+    .all())
     .sort((a, b) => a.weekNumber - b.weekNumber)
 
   const printer = new PdfPrinter(fonts)
@@ -99,22 +99,22 @@ export function generateQuickReferencePdf(athleteId: number, planId: number): Bu
     doc.on('data', (chunk: Buffer) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.end()
-  }) as unknown as Buffer
+  })
 }
 
-export function generateFullPdf(athleteId: number, planId: number): Buffer | null {
-  const plan = db
+export async function generateFullPdf(athleteId: number, planId: number): Promise<Buffer | null> {
+  const plan = await db
     .select()
     .from(trainingPlans)
     .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
     .get()
   if (!plan) return null
 
-  const weeks = db
+  const weeks = (await db
     .select()
     .from(weeklyBlocks)
     .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all()
+    .all())
     .sort((a, b) => a.weekNumber - b.weekNumber)
 
   const printer = new PdfPrinter(fonts)
@@ -150,11 +150,11 @@ export function generateFullPdf(athleteId: number, planId: number): Buffer | nul
       content.push({ text: week.notes, style: 'weekNotes' } as Content)
     }
 
-    const workouts = db
+    const workouts = (await db
       .select()
       .from(dailyWorkouts)
       .where(eq(dailyWorkouts.weeklyBlockId, week.id))
-      .all()
+      .all())
       .sort((a, b) => a.workoutDate.localeCompare(b.workoutDate))
 
     const tableBody: TableCell[][] = [
@@ -230,5 +230,5 @@ export function generateFullPdf(athleteId: number, planId: number): Buffer | nul
     doc.on('data', (chunk: Buffer) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.end()
-  }) as unknown as Buffer
+  })
 }

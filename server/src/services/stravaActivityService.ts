@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { db } from '../db/client.js'
-import { stravaActivities, athletes } from '../db/schema.js'
+import { stravaActivities } from '../db/schema.js'
 import { eq, and, inArray, gte, lte } from 'drizzle-orm'
 import { getValidToken, getValidTokenForAthlete } from './stravaOAuthService.js'
 import type { ActivityDto, SyncResultDto, PagedResponse } from '../types/index.js'
@@ -80,14 +80,14 @@ export async function syncActivities(): Promise<SyncResultDto> {
       if (!RUNNING_SPORT_TYPES.slice(0, 2).includes(sportType)) continue
 
       const stravaId = Number(activity.id)
-      const existing = db
+      const existing = await db
         .select()
         .from(stravaActivities)
         .where(eq(stravaActivities.stravaId, stravaId))
         .get()
       if (!existing) {
         try {
-          db.insert(stravaActivities)
+          await db.insert(stravaActivities)
             .values(parseActivity(activity, token.athleteId))
             .run()
           totalSynced++
@@ -141,7 +141,7 @@ export async function syncActivitiesForAthlete(
       if (!['Run', 'TrailRun'].includes(sportType)) continue
 
       const stravaId = Number(activity.id)
-      const existing = db
+      const existing = await db
         .select()
         .from(stravaActivities)
         .where(eq(stravaActivities.stravaId, stravaId))
@@ -149,7 +149,7 @@ export async function syncActivitiesForAthlete(
 
       if (!existing) {
         try {
-          db.insert(stravaActivities)
+          await db.insert(stravaActivities)
             .values(parseActivity(activity, token.athleteId, internalAthleteId))
             .run()
           totalSynced++
@@ -157,7 +157,7 @@ export async function syncActivitiesForAthlete(
           // skip
         }
       } else if (existing.internalAthleteId !== internalAthleteId) {
-        db.update(stravaActivities)
+        await db.update(stravaActivities)
           .set({ internalAthleteId })
           .where(eq(stravaActivities.id, existing.id))
           .run()
@@ -172,12 +172,12 @@ export async function syncActivitiesForAthlete(
   return { syncedCount: totalSynced, message: `Successfully synced ${totalSynced} new activities` }
 }
 
-export function getActivities(page: number, size: number): PagedResponse<ActivityDto> {
-  const all = db
+export async function getActivities(page: number, size: number): Promise<PagedResponse<ActivityDto>> {
+  const all = (await db
     .select()
     .from(stravaActivities)
     .where(inArray(stravaActivities.sportType, RUNNING_SPORT_TYPES))
-    .all()
+    .all())
     .sort((a, b) => b.activityDate.localeCompare(a.activityDate))
 
   const totalElements = all.length
@@ -187,12 +187,12 @@ export function getActivities(page: number, size: number): PagedResponse<Activit
   return { content, totalElements, totalPages, number: page, size }
 }
 
-export function getActivitiesForAthlete(
+export async function getActivitiesForAthlete(
   internalAthleteId: number,
   page: number,
   size: number
-): PagedResponse<ActivityDto> {
-  const all = db
+): Promise<PagedResponse<ActivityDto>> {
+  const all = (await db
     .select()
     .from(stravaActivities)
     .where(
@@ -201,7 +201,7 @@ export function getActivitiesForAthlete(
         inArray(stravaActivities.sportType, RUNNING_SPORT_TYPES)
       )
     )
-    .all()
+    .all())
     .sort((a, b) => b.activityDate.localeCompare(a.activityDate))
 
   const totalElements = all.length
@@ -211,12 +211,12 @@ export function getActivitiesForAthlete(
   return { content, totalElements, totalPages, number: page, size }
 }
 
-export function getActivitiesByDateRange(
+export async function getActivitiesByDateRange(
   internalAthleteId: number,
   startDate: string,
   endDate: string
-): typeof stravaActivities.$inferSelect[] {
-  return db
+): Promise<typeof stravaActivities.$inferSelect[]> {
+  return (await db
     .select()
     .from(stravaActivities)
     .where(
@@ -226,7 +226,7 @@ export function getActivitiesByDateRange(
         lte(stravaActivities.activityDate, endDate)
       )
     )
-    .all()
+    .all())
     .filter((a) => RUNNING_SPORT_TYPES.includes(a.sportType ?? ''))
     .sort((a, b) => a.activityDate.localeCompare(b.activityDate))
 }

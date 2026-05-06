@@ -18,31 +18,21 @@ export function buildAuthorizationUrl(internalAthleteId?: number): string {
     approval_prompt: 'auto',
     scope: 'read,activity:read_all',
   })
-  if (internalAthleteId !== undefined) {
-    params.set('state', String(internalAthleteId))
-  }
+  if (internalAthleteId !== undefined) params.set('state', String(internalAthleteId))
   return `${STRAVA_AUTH_URL}?${params.toString()}`
 }
 
-export async function exchangeCodeForToken(code: string): Promise<{
-  athleteId: number
-  accessToken: string
-  refreshToken: string
-  expiresAt: number
-  scope: string | null
-}> {
+export async function exchangeCodeForToken(code: string) {
   const response = await axios.post(STRAVA_TOKEN_URL, new URLSearchParams({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
     code,
     grant_type: 'authorization_code',
   }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
-
-  const data = response.data as Record<string, unknown>
-  return upsertToken(data)
+  return upsertToken(response.data as Record<string, unknown>)
 }
 
-async function refreshTokenRow(token: typeof stravaTokens.$inferSelect): Promise<typeof stravaTokens.$inferSelect> {
+async function refreshTokenRow(token: typeof stravaTokens.$inferSelect) {
   const response = await axios.post(STRAVA_TOKEN_URL, new URLSearchParams({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
@@ -51,63 +41,42 @@ async function refreshTokenRow(token: typeof stravaTokens.$inferSelect): Promise
   }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
 
   const data = response.data as Record<string, unknown>
-  const now = new Date().toISOString()
-  const updated = db
-    .update(stravaTokens)
-    .set({
-      accessToken: data.access_token as string,
-      refreshToken: (data.refresh_token as string | undefined) ?? token.refreshToken,
-      expiresAt: (data.expires_at as number),
-      updatedAt: now,
-    })
-    .where(eq(stravaTokens.id, token.id))
-    .returning()
-    .get()
-  return updated
+  return db.update(stravaTokens).set({
+    accessToken: data.access_token as string,
+    refreshToken: (data.refresh_token as string | undefined) ?? token.refreshToken,
+    expiresAt: data.expires_at as number,
+    updatedAt: new Date().toISOString(),
+  }).where(eq(stravaTokens.id, token.id)).returning().get()
 }
 
 function isExpired(token: typeof stravaTokens.$inferSelect): boolean {
   return token.expiresAt - 300 < Date.now() / 1000
 }
 
-export async function getValidToken(): Promise<typeof stravaTokens.$inferSelect | null> {
-  const token = db.select().from(stravaTokens).all().sort((a, b) => a.id - b.id)[0]
+export async function getValidToken() {
+  const tokens = await db.select().from(stravaTokens).all()
+  const token = tokens.sort((a, b) => a.id - b.id)[0]
   if (!token) return null
   return isExpired(token) ? refreshTokenRow(token) : token
 }
 
-export function hasToken(): boolean {
-  return db.select().from(stravaTokens).all().length > 0
+export async function hasToken(): Promise<boolean> {
+  const tokens = await db.select().from(stravaTokens).all()
+  return tokens.length > 0
 }
 
-export async function getValidTokenForAthlete(
-  internalAthleteId: number
-): Promise<typeof stravaTokens.$inferSelect | null> {
-  const token = db
-    .select()
-    .from(stravaTokens)
-    .where(eq(stravaTokens.internalAthleteId, internalAthleteId))
-    .get()
+export async function getValidTokenForAthlete(internalAthleteId: number) {
+  const token = await db.select().from(stravaTokens).where(eq(stravaTokens.internalAthleteId, internalAthleteId)).get()
   if (!token) return null
   return isExpired(token) ? refreshTokenRow(token) : token
 }
 
-export function hasTokenForAthlete(internalAthleteId: number): boolean {
-  const token = db
-    .select()
-    .from(stravaTokens)
-    .where(eq(stravaTokens.internalAthleteId, internalAthleteId))
-    .get()
+export async function hasTokenForAthlete(internalAthleteId: number): Promise<boolean> {
+  const token = await db.select().from(stravaTokens).where(eq(stravaTokens.internalAthleteId, internalAthleteId)).get()
   return token != null
 }
 
-function upsertToken(data: Record<string, unknown>): {
-  athleteId: number
-  accessToken: string
-  refreshToken: string
-  expiresAt: number
-  scope: string | null
-} {
+async function upsertToken(data: Record<string, unknown>) {
   const athlete = data.athlete as Record<string, unknown> | undefined
   const stravaAthleteId = Number((athlete?.id as number | undefined) ?? 0)
   if (!stravaAthleteId) throw new Error('No athlete id in Strava response')
@@ -118,46 +87,21 @@ function upsertToken(data: Record<string, unknown>): {
   const scope = (data.scope as string | undefined) ?? null
   const now = new Date().toISOString()
 
-  const existing = db
-    .select()
-    .from(stravaTokens)
-    .where(eq(stravaTokens.athleteId, stravaAthleteId))
-    .get()
-
+  const existing = await db.select().from(stravaTokens).where(eq(stravaTokens.athleteId, stravaAthleteId)).get()
   if (existing) {
-    db.update(stravaTokens)
-      .set({ accessToken, refreshToken, expiresAt, scope, internalAthleteId: null, updatedAt: now })
-      .where(eq(stravaTokens.id, existing.id))
-      .run()
+    await db.update(stravaTokens).set({ accessToken, refreshToken, expiresAt, scope, updatedAt: now })
+      .where(eq(stravaTokens.id, existing.id)).run()
   } else {
-    db.insert(stravaTokens).values({
-      athleteId: stravaAthleteId,
-      accessToken,
-      refreshToken,
-      expiresAt,
-      scope,
-      createdAt: now,
-      updatedAt: now,
-    }).run()
+    await db.insert(stravaTokens).values({ athleteId: stravaAthleteId, accessToken, refreshToken, expiresAt, scope, createdAt: now, updatedAt: now }).run()
   }
-
   return { athleteId: stravaAthleteId, accessToken, refreshToken, expiresAt, scope }
 }
 
-export function linkTokenToAthlete(stravaAthleteId: number, internalAthleteId: number) {
-  const token = db
-    .select()
-    .from(stravaTokens)
-    .where(eq(stravaTokens.athleteId, stravaAthleteId))
-    .get()
+export async function linkTokenToAthlete(stravaAthleteId: number, internalAthleteId: number) {
+  const token = await db.select().from(stravaTokens).where(eq(stravaTokens.athleteId, stravaAthleteId)).get()
   if (!token) return
-
-  // Also verify the athlete exists
-  const athlete = db.select().from(athletes).where(eq(athletes.id, internalAthleteId)).get()
+  const athlete = await db.select().from(athletes).where(eq(athletes.id, internalAthleteId)).get()
   if (!athlete) return
-
-  db.update(stravaTokens)
-    .set({ internalAthleteId, updatedAt: new Date().toISOString() })
-    .where(eq(stravaTokens.id, token.id))
-    .run()
+  await db.update(stravaTokens).set({ internalAthleteId, updatedAt: new Date().toISOString() })
+    .where(eq(stravaTokens.id, token.id)).run()
 }

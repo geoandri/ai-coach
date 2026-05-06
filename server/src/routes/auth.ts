@@ -35,8 +35,8 @@ export async function authRoutes(app: FastifyInstance) {
       const token = await stravaOAuthService.exchangeCodeForToken(code)
 
       if (internalAthleteId) {
-        athleteService.linkStravaAthlete(internalAthleteId, token.athleteId)
-        stravaOAuthService.linkTokenToAthlete(token.athleteId, internalAthleteId)
+        await athleteService.linkStravaAthlete(internalAthleteId, token.athleteId)
+        await stravaOAuthService.linkTokenToAthlete(token.athleteId, internalAthleteId)
       }
 
       return reply
@@ -61,7 +61,7 @@ export async function authRoutes(app: FastifyInstance) {
 
   // Status
   app.get('/api/auth/strava/status', async () => {
-    const hasToken = stravaOAuthService.hasToken()
+    const hasToken = await stravaOAuthService.hasToken()
     if (hasToken) {
       const token = await stravaOAuthService.getValidToken()
       return {
