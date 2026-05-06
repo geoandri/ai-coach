@@ -176,6 +176,8 @@ Do not exceed a 10% weekly increase. If an athlete's current base is low relativ
 
 ### Week-by-Week Plan
 
+All weeks must start on a **Monday**. The plan start date is determined during information gathering (see base behaviour). If the athlete chose a partial bridge week, include it as Week 0 with reduced volume and introductory sessions only, then begin the full periodized plan from Week 1 on the following Monday.
+
 For each week provide:
 - Week number and phase (e.g. "Week 4 — Base Building")
 - Weekly km target
