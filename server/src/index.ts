@@ -1,5 +1,4 @@
 import { runMigrations } from './db/client.js'
-import { runSeed } from './db/seed.js'
 import { buildApp } from './app.js'
 import { spawn } from 'child_process'
 import { join, dirname } from 'path'
@@ -18,17 +17,12 @@ async function main() {
   runMigrations()
   console.log('Migrations complete.')
 
-  // 2. Run seed (idempotent)
-  console.log('Running seed...')
-  await runSeed()
-  console.log('Seed complete.')
-
-  // 3. Start Fastify
+  // 2. Start Fastify
   const app = await buildApp()
   await app.listen({ port: PORT, host: '0.0.0.0' })
   console.log(`AI Coach server listening on port ${PORT}`)
 
-  // 4. Spawn MCP child process if dist exists
+  // 3. Spawn MCP child process if dist exists
   const mcpPath = join(__dirname, '..', '..', 'mcp', 'dist', 'index.js')
   if (existsSync(mcpPath)) {
     const mcpEnv = {
