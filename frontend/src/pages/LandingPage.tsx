@@ -40,23 +40,7 @@ export default function LandingPage() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-6">
         <h2 className="text-lg font-semibold text-white">How it works</h2>
 
-        <Step number={1} title="Connect Strava">
-          <p className="text-gray-400 text-sm mb-2">
-            Create a Strava API application at{' '}
-            <code className="text-orange-400 text-xs">https://www.strava.com/settings/api</code>{' '}
-            and set the <span className="text-white">Authorization Callback Domain</span> to{' '}
-            <code className="text-orange-400 text-xs">localhost</code>.
-            Then add your credentials to <code className="text-orange-400 text-xs">.env</code>:
-          </p>
-          <Code>{`STRAVA_CLIENT_ID=your_client_id
-STRAVA_CLIENT_SECRET=your_client_secret
-STRAVA_REDIRECT_URI=http://localhost:3000/api/auth/strava/callback`}</Code>
-          <p className="text-gray-500 text-xs mt-2">
-            The callback URL uses port <code className="text-orange-400">3000</code> — the same port as the app.
-          </p>
-        </Step>
-
-        <Step number={2} title="Configure the MCP server">
+        <Step number={1} title="Configure the MCP server">
           <p className="text-gray-400 text-sm">
             The MCP server starts automatically alongside the app and is reachable at{' '}
             <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
@@ -82,7 +66,7 @@ STRAVA_REDIRECT_URI=http://localhost:3000/api/auth/strava/callback`}</Code>
           </p>
         </Step>
 
-        <Step number={3} title="Select a coach persona in Claude">
+        <Step number={2} title="Select a coach persona in Claude">
           <p className="text-gray-400 text-sm mb-3">
             The MCP server exposes coach personas as named prompts. Selecting one injects the full
             coaching instructions — role, information-gathering workflow, plan generation logic, and
@@ -107,7 +91,7 @@ STRAVA_REDIRECT_URI=http://localhost:3000/api/auth/strava/callback`}</Code>
           </div>
         </Step>
 
-        <Step number={4} title="Start coaching">
+        <Step number={3} title="Start coaching">
           <p className="text-gray-400 text-sm">
             Claude will ask for the athlete's name, load their profile if one exists, and guide the
             session from there. New athletes are created through the conversation; their profiles and
