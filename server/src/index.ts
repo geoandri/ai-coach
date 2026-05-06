@@ -29,7 +29,7 @@ async function main() {
     const mcpEnv = {
       ...process.env,
       PORT: String(MCP_PORT),
-      BACKEND_URL: `http://localhost:${PORT}`,
+      BACKEND_URL: `http://localhost:${PORT}/api`,
     }
 
     const mcp = spawn(process.execPath, [mcpPath], {
