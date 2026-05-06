@@ -11,7 +11,7 @@ import { AiCoachClient } from './client.js'
 import { athleteTools, handleAthleteTool } from './tools/athletes.js'
 import { planTools, handlePlanTool } from './tools/plans.js'
 import { activityTools, handleActivityTool } from './tools/activities.js'
-import { readFileSync, readdirSync } from 'fs'
+import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname, basename } from 'path'
 import { fileURLToPath } from 'url'
 import { createServer } from 'http'
@@ -24,7 +24,11 @@ const client = new AiCoachClient(backendUrl, publicUrl)
 
 // Load coach persona prompts from docs/personas/ at startup.
 // Files starting with _ (e.g. _base.md, _template.md) are skipped.
-const personasDir = join(__dirname, '..', '..', 'docs', 'personas')
+// Artifact layout: <root>/mcp/dist/index.js + <root>/personas/ → go up two levels
+// Repo dev layout: mcp/dist/index.js + docs/personas/          → go up two levels + docs/
+const personasDirArtifact = join(__dirname, '..', '..', 'personas')
+const personasDirRepo = join(__dirname, '..', '..', 'docs', 'personas')
+const personasDir = existsSync(personasDirArtifact) ? personasDirArtifact : personasDirRepo
 
 interface CoachPrompt {
   name: string

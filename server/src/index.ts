@@ -24,7 +24,11 @@ async function main() {
   console.log(`AI Coach server listening on port ${PORT}`)
 
   // 3. Spawn MCP child process if dist exists
-  const mcpPath = join(__dirname, '..', '..', 'mcp', 'dist', 'index.js')
+  // Artifact layout:  <root>/dist/index.js + <root>/mcp/dist/index.js  → go up one level
+  // Repo dev layout:  server/dist/index.js + mcp/dist/index.js         → go up two levels
+  const mcpPathArtifact = join(__dirname, '..', 'mcp', 'dist', 'index.js')
+  const mcpPathRepo = join(__dirname, '..', '..', 'mcp', 'dist', 'index.js')
+  const mcpPath = existsSync(mcpPathArtifact) ? mcpPathArtifact : mcpPathRepo
   if (existsSync(mcpPath)) {
     const mcpEnv = {
       ...process.env,
