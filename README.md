@@ -1,8 +1,9 @@
 # AI Coach
 
 A personalised AI coaching platform where an AI agent acts as a personal coach: it interviews
-athletes, pulls their Strava history, generates periodized training plans, and tracks
-week-by-week adherence.
+athletes, generates periodized training plans, and tracks week-by-week adherence. Strava
+integration is optional — it allows the coach to pull your training history automatically,
+but the app works fully without it.
 
 ## Requirements
 
@@ -14,8 +15,13 @@ Download the latest release from the [Releases](../../releases) page and extract
 
 ## Setup
 
-### 1. Create a Strava API application
+### 1. Create a Strava API application (optional)
 
+Strava integration is optional. Without it the coach will ask about your training history
+manually instead of importing it automatically. If you want to skip Strava, leave the
+`STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` fields blank in your `.env` file.
+
+To enable Strava:
 1. Go to https://www.strava.com/settings/api and create an application
 2. Set **Authorization Callback Domain** to `localhost`
 3. Note your **Client ID** and **Client Secret**
