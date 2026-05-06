@@ -3,7 +3,7 @@ name: Release Standalone
 on:
   push:
     branches:
-      - node-standalone
+      - main
     tags:
       - 'v*'
 
