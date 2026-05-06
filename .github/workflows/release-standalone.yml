@@ -129,25 +129,33 @@ jobs:
 
           Open http://localhost:3000. The app and MCP server start together.
 
-          ## MCP Setup (Claude Desktop)
+          ## MCP Setup
 
-          Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+          ### Claude Desktop
+
+          Add to `~/Library/Application Support/Claude/claude_desktop_config.json`,
+          replacing `/path/to/ai-coach-standalone` with the folder you extracted the release into:
 
           ```json
           {
             "mcpServers": {
               "ai-coach": {
-                "command": "npx",
-                "args": ["mcp-remote", "http://localhost:3001/mcp"]
+                "command": "node",
+                "args": ["/path/to/ai-coach-standalone/mcp/dist/index.js"],
+                "env": {
+                  "BACKEND_URL": "http://localhost:3000"
+                }
               }
             }
           }
           ```
 
-          For Claude Code, run once:
+          ### Claude Code
+
+          Run once from the release folder:
 
           ```
-          claude mcp add --transport http ai-coach http://localhost:3001/mcp
+          claude mcp add -e BACKEND_URL=http://localhost:3000 ai-coach -- node mcp/dist/index.js
           ```
 
           ## Data

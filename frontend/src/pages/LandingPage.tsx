@@ -42,27 +42,31 @@ export default function LandingPage() {
 
         <Step number={1} title="Configure the MCP server">
           <p className="text-gray-400 text-sm">
-            The MCP server starts automatically alongside the app and is reachable at{' '}
-            <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Add it to your Claude Desktop config at{' '}
+            Claude Desktop launches the MCP server directly via stdio. Add the following to{' '}
             <code className="text-orange-400 text-xs">
               ~/Library/Application Support/Claude/claude_desktop_config.json
             </code>
-            :
+            , replacing <code className="text-orange-400 text-xs">/path/to/ai-coach-standalone</code> with
+            the folder you extracted the release into:
           </p>
           <Code>{`{
   "mcpServers": {
     "ai-coach": {
-      "command": "npx",
-      "args": ["mcp-remote", "http://localhost:3001/mcp"]
+      "command": "node",
+      "args": ["/path/to/ai-coach-standalone/mcp/dist/index.js"],
+      "env": {
+        "BACKEND_URL": "http://localhost:3000"
+      }
     }
   }
 }`}</Code>
+          <p className="text-gray-400 text-sm mt-3">
+            For Claude Code, run once from the release folder:
+          </p>
+          <Code>{`claude mcp add -e BACKEND_URL=http://localhost:3000 ai-coach -- node mcp/dist/index.js`}</Code>
           <p className="text-gray-500 text-xs mt-2">
-            For Claude Code run once in this project:{' '}
-            <code className="text-orange-400">claude mcp add --transport http ai-coach http://localhost:3001/mcp</code>
+            The MCP server connects to the app on port <code className="text-orange-400">3000</code>.
+            Make sure the app is running before starting a coaching session.
           </p>
         </Step>
 
