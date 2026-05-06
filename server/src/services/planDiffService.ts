@@ -14,13 +14,12 @@ function addDays(date: string, days: number): string {
   return d.toISOString().substring(0, 10)
 }
 
-export async function getPlanVsActual(
+export function getPlanVsActual(
   athleteId: number,
   startDate: string,
   endDate: string
-): Promise<PlanVsActualDto> {
-  // Find athlete's plan
-  const plan = await db
+): PlanVsActualDto {
+  const plan = db
     .select()
     .from(trainingPlans)
     .where(eq(trainingPlans.athleteId, athleteId))
@@ -29,8 +28,7 @@ export async function getPlanVsActual(
   const plannedWorkoutsByDate: Record<string, typeof dailyWorkouts.$inferSelect> = {}
 
   if (plan) {
-    // Get weekly blocks in range
-    const blocks = await db
+    const blocks = db
       .select()
       .from(weeklyBlocks)
       .where(
@@ -43,7 +41,7 @@ export async function getPlanVsActual(
       .all()
 
     for (const block of blocks) {
-      const workouts = await db
+      const workouts = db
         .select()
         .from(dailyWorkouts)
         .where(
@@ -61,7 +59,7 @@ export async function getPlanVsActual(
     }
   }
 
-  const activities = await getActivitiesByDateRange(athleteId, startDate, endDate)
+  const activities = getActivitiesByDateRange(athleteId, startDate, endDate)
   const activitiesByDate: Record<string, typeof activities> = {}
   for (const a of activities) {
     if (!activitiesByDate[a.activityDate]) activitiesByDate[a.activityDate] = []

@@ -9,7 +9,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: macos-latest
+            platform: macos-arm64
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -46,12 +54,12 @@ jobs:
           npm ci
           npm run build
 
-      # ── Install server prod deps only ─────────────────────────────────────
+      # ── Install server prod deps (compiles native better-sqlite3 for this OS) ──
       - name: Install server production dependencies
         working-directory: server
         run: npm ci --omit=dev
 
-      # ── Install MCP prod deps only ────────────────────────────────────────
+      # ── Install MCP prod deps ─────────────────────────────────────────────
       - name: Install MCP production dependencies
         working-directory: mcp
         run: npm ci --omit=dev
@@ -60,6 +68,7 @@ jobs:
       - name: Assemble release directory
         run: |
           TAG="${GITHUB_REF_NAME}"
+          PLATFORM="${{ matrix.platform }}"
           RELEASE_DIR="ai-coach-standalone"
 
           mkdir -p "${RELEASE_DIR}/mcp"
@@ -67,7 +76,7 @@ jobs:
           # Server compiled JS
           cp -r server/dist "${RELEASE_DIR}/dist"
 
-          # Server prod node_modules
+          # Server prod node_modules (includes platform-native better-sqlite3)
           cp -r server/node_modules "${RELEASE_DIR}/node_modules"
 
           # Server package.json (needed for "type": "module")
@@ -111,13 +120,13 @@ jobs:
           Change with `DATABASE_PATH` env var.
           EOF
 
-          tar -czf "ai-coach-standalone-${TAG}.tar.gz" "${RELEASE_DIR}/"
+          tar -czf "ai-coach-standalone-${TAG}-${PLATFORM}.tar.gz" "${RELEASE_DIR}/"
 
       # ── Upload artifact on every push (CI) ───────────────────────────────
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-coach-standalone
+          name: ai-coach-standalone-${{ matrix.platform }}
           path: ai-coach-standalone-*.tar.gz
           retention-days: 7
 

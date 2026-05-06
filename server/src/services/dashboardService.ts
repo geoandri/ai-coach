@@ -4,21 +4,18 @@ import { eq } from 'drizzle-orm'
 import { getActivitiesByDateRange } from './stravaActivityService.js'
 import type { DashboardSummaryDto, WeekAdherenceDto } from '../types/index.js'
 
-async function buildDashboard(
-  planId: number,
-  athleteId: number,
-): Promise<DashboardSummaryDto> {
-  const weeks = (await db
+function buildDashboard(planId: number, athleteId: number): DashboardSummaryDto {
+  const weeks = db
     .select()
     .from(weeklyBlocks)
     .where(eq(weeklyBlocks.trainingPlanId, planId))
-    .all())
+    .all()
     .sort((a, b) => a.weekNumber - b.weekNumber)
 
   const today = new Date().toISOString().substring(0, 10)
 
-  const weekAdherences: WeekAdherenceDto[] = await Promise.all(weeks.map(async (week) => {
-    const activities = await getActivitiesByDateRange(athleteId, week.startDate, week.endDate)
+  const weekAdherences: WeekAdherenceDto[] = weeks.map((week) => {
+    const activities = getActivitiesByDateRange(athleteId, week.startDate, week.endDate)
 
     const actualKm =
       activities.reduce((sum, a) => sum + (a.distanceM ? a.distanceM / 1000 : 0), 0)
@@ -50,7 +47,7 @@ async function buildDashboard(
       isCurrentWeek,
       isFutureWeek,
     }
-  }))
+  })
 
   const currentWeekNumber =
     weekAdherences.find((w) => w.isCurrentWeek)?.weekNumber ?? null
@@ -67,21 +64,18 @@ async function buildDashboard(
   }
 }
 
-export async function getDashboardSummary(): Promise<DashboardSummaryDto> {
-  const plans = await db.select().from(trainingPlans).all()
-  const plan = plans.sort((a, b) => a.id - b.id)[0]
+export function getDashboardSummary(): DashboardSummaryDto {
+  const plan = db.select().from(trainingPlans).all().sort((a, b) => a.id - b.id)[0]
   if (!plan) return { weeks: [], currentWeekNumber: null, totalPlannedKm: 0, totalActualKm: 0 }
-
   return buildDashboard(plan.id, plan.athleteId ?? 0)
 }
 
-export async function getDashboardSummaryForAthlete(athleteId: number): Promise<DashboardSummaryDto> {
-  const plan = await db
+export function getDashboardSummaryForAthlete(athleteId: number): DashboardSummaryDto {
+  const plan = db
     .select()
     .from(trainingPlans)
     .where(eq(trainingPlans.athleteId, athleteId))
     .get()
   if (!plan) return { weeks: [], currentWeekNumber: null, totalPlannedKm: 0, totalActualKm: 0 }
-
   return buildDashboard(plan.id, athleteId)
 }

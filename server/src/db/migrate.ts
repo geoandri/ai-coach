@@ -1,4 +1,4 @@
 import { runMigrations } from '../db/client.js'
 
-await runMigrations()
+runMigrations()
 console.log('Migrations applied.')

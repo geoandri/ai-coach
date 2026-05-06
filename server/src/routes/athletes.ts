@@ -17,7 +17,7 @@ import type {
 export async function athleteRoutes(app: FastifyInstance) {
   // ── CRUD ──────────────────────────────────────────────────────────────────
   app.post<{ Body: CreateAthleteRequest }>('/api/athletes', async (request, reply) => {
-    const athlete = await athleteService.createAthlete(request.body)
+    const athlete = athleteService.createAthlete(request.body)
     return reply.code(201).send(athlete)
   })
 
@@ -26,7 +26,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   })
 
   app.get<{ Params: { id: string } }>('/api/athletes/:id', async (request, reply) => {
-    const athlete = await athleteService.getAthlete(Number(request.params.id))
+    const athlete = athleteService.getAthlete(Number(request.params.id))
     if (!athlete) return reply.code(404).send({ error: 'Athlete not found' })
     return athlete
   })
@@ -34,14 +34,14 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.put<{ Params: { id: string }; Body: UpdateAthleteRequest }>(
     '/api/athletes/:id',
     async (request, reply) => {
-      const athlete = await athleteService.updateAthlete(Number(request.params.id), request.body)
+      const athlete = athleteService.updateAthlete(Number(request.params.id), request.body)
       if (!athlete) return reply.code(404).send({ error: 'Athlete not found' })
       return athlete
     }
   )
 
   app.delete<{ Params: { id: string } }>('/api/athletes/:id', async (request, reply) => {
-    const ok = await athleteService.deleteAthlete(Number(request.params.id))
+    const ok = athleteService.deleteAthlete(Number(request.params.id))
     if (!ok) return reply.code(404).send({ error: 'Athlete not found' })
     return reply.code(204).send()
   })
@@ -50,7 +50,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string }; Body: AddCoachNoteRequest }>(
     '/api/athletes/:id/coach-notes',
     async (request, reply) => {
-      const athlete = await athleteService.addCoachNote(
+      const athlete = athleteService.addCoachNote(
         Number(request.params.id),
         request.body.note
       )
@@ -63,7 +63,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string }; Body: CreateTrainingPlanRequest }>(
     '/api/athletes/:id/training-plan',
     async (request, reply) => {
-      const result = await trainingPlanService.createPlanForAthlete(
+      const result = trainingPlanService.createPlanForAthlete(
         Number(request.params.id),
         request.body
       )
@@ -75,7 +75,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>(
     '/api/athletes/:id/training-plan',
     async (request, reply) => {
-      const plan = await trainingPlanService.getPlanForAthlete(Number(request.params.id))
+      const plan = trainingPlanService.getPlanForAthlete(Number(request.params.id))
       if (!plan) return reply.code(404).send({ error: 'No training plan found' })
       return plan
     }
@@ -84,7 +84,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>(
     '/api/athletes/:id/training-plan/summary',
     async (request, reply) => {
-      const plan = await trainingPlanService.getPlanSummaryForAthlete(Number(request.params.id))
+      const plan = trainingPlanService.getPlanSummaryForAthlete(Number(request.params.id))
       if (!plan) return reply.code(404).send({ error: 'No training plan found' })
       return plan
     }
@@ -93,7 +93,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.delete<{ Params: { id: string; planId: string } }>(
     '/api/athletes/:id/training-plans/:planId',
     async (request, reply) => {
-      const ok = await trainingPlanService.deletePlanForAthlete(
+      const ok = trainingPlanService.deletePlanForAthlete(
         Number(request.params.id),
         Number(request.params.planId)
       )
@@ -105,7 +105,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string; weekNumber: string } }>(
     '/api/athletes/:id/training-plan/week/:weekNumber',
     async (request, reply) => {
-      const week = await trainingPlanService.getWeekForAthlete(
+      const week = trainingPlanService.getWeekForAthlete(
         Number(request.params.id),
         Number(request.params.weekNumber)
       )
@@ -117,7 +117,7 @@ export async function athleteRoutes(app: FastifyInstance) {
   app.patch<{ Params: { id: string; weekNumber: string }; Body: UpdateWeekRequest }>(
     '/api/athletes/:id/training-plan/weeks/:weekNumber',
     async (request, reply) => {
-      const result = await trainingPlanService.updateWeekForAthlete(
+      const result = trainingPlanService.updateWeekForAthlete(
         Number(request.params.id),
         Number(request.params.weekNumber),
         request.body
@@ -185,7 +185,7 @@ export async function athleteRoutes(app: FastifyInstance) {
     '/api/athletes/:id/auth/strava/status',
     async (request) => {
       const id = Number(request.params.id)
-      const hasToken = await stravaOAuthService.hasTokenForAthlete(id)
+      const hasToken = stravaOAuthService.hasTokenForAthlete(id)
       if (hasToken) {
         const token = await stravaOAuthService.getValidTokenForAthlete(id)
         return { connected: true, stravaAthleteId: token?.athleteId ?? 0 }

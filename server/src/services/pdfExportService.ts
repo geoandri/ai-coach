@@ -27,19 +27,19 @@ function getPhaseColor(phase: string | null): string {
   return '#f5f5f5'
 }
 
-export async function generateQuickReferencePdf(athleteId: number, planId: number): Promise<Buffer | null> {
-  const plan = await db
+export function generateQuickReferencePdf(athleteId: number, planId: number): Promise<Buffer> | null {
+  const plan = db
     .select()
     .from(trainingPlans)
     .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
     .get()
   if (!plan) return null
 
-  const weeks = (await db
+  const weeks = db
     .select()
     .from(weeklyBlocks)
     .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all())
+    .all()
     .sort((a, b) => a.weekNumber - b.weekNumber)
 
   const printer = new PdfPrinter(fonts)
@@ -102,19 +102,19 @@ export async function generateQuickReferencePdf(athleteId: number, planId: numbe
   })
 }
 
-export async function generateFullPdf(athleteId: number, planId: number): Promise<Buffer | null> {
-  const plan = await db
+export function generateFullPdf(athleteId: number, planId: number): Promise<Buffer> | null {
+  const plan = db
     .select()
     .from(trainingPlans)
     .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
     .get()
   if (!plan) return null
 
-  const weeks = (await db
+  const weeks = db
     .select()
     .from(weeklyBlocks)
     .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all())
+    .all()
     .sort((a, b) => a.weekNumber - b.weekNumber)
 
   const printer = new PdfPrinter(fonts)
@@ -150,11 +150,11 @@ export async function generateFullPdf(athleteId: number, planId: number): Promis
       content.push({ text: week.notes, style: 'weekNotes' } as Content)
     }
 
-    const workouts = (await db
+    const workouts = db
       .select()
       .from(dailyWorkouts)
       .where(eq(dailyWorkouts.weeklyBlockId, week.id))
-      .all())
+      .all()
       .sort((a, b) => a.workoutDate.localeCompare(b.workoutDate))
 
     const tableBody: TableCell[][] = [

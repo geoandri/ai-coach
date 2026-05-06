@@ -14,7 +14,7 @@ const MCP_PORT = Number(process.env.MCP_PORT ?? 3001)
 async function main() {
   // 1. Run database migrations
   console.log('Running migrations...')
-  await runMigrations()
+  runMigrations()
   console.log('Migrations complete.')
 
   // 2. Start Fastify

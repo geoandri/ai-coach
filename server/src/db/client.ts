@@ -1,6 +1,6 @@
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
-import { migrate } from 'drizzle-orm/libsql/migrator'
+import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import * as schema from './schema.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -17,11 +17,13 @@ if (dataDir && dataDir !== '.') {
   mkdirSync(dataDir, { recursive: true })
 }
 
-const client = createClient({ url: `file:${dbPath}` })
+const sqlite = new Database(dbPath)
+sqlite.pragma('journal_mode = WAL')
+sqlite.pragma('foreign_keys = ON')
 
-export const db = drizzle(client, { schema })
+export const db = drizzle(sqlite, { schema })
 
-export async function runMigrations() {
+export function runMigrations() {
   const migrationsFolder = join(__dirname, 'migrations')
-  await migrate(db, { migrationsFolder })
+  migrate(db, { migrationsFolder })
 }

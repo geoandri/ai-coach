@@ -37,19 +37,19 @@ function toDto(row: typeof athletes.$inferSelect): AthleteDto {
   }
 }
 
-export async function listAthletes(): Promise<AthleteDto[]> {
-  const rows = await db.select().from(athletes).all()
+export function listAthletes(): AthleteDto[] {
+  const rows = db.select().from(athletes).all()
   return rows.map(toDto)
 }
 
-export async function getAthlete(id: number): Promise<AthleteDto | null> {
-  const row = await db.select().from(athletes).where(eq(athletes.id, id)).get()
+export function getAthlete(id: number): AthleteDto | null {
+  const row = db.select().from(athletes).where(eq(athletes.id, id)).get()
   return row ? toDto(row) : null
 }
 
-export async function createAthlete(req: CreateAthleteRequest): Promise<AthleteDto> {
+export function createAthlete(req: CreateAthleteRequest): AthleteDto {
   const now = new Date().toISOString()
-  const result = await db.insert(athletes).values({
+  const result = db.insert(athletes).values({
     name: req.name,
     email: req.email,
     experienceYears: req.experienceYears,
@@ -77,12 +77,12 @@ export async function createAthlete(req: CreateAthleteRequest): Promise<AthleteD
   return toDto(result)
 }
 
-export async function updateAthlete(id: number, req: UpdateAthleteRequest): Promise<AthleteDto | null> {
-  const existing = await db.select().from(athletes).where(eq(athletes.id, id)).get()
+export function updateAthlete(id: number, req: UpdateAthleteRequest): AthleteDto | null {
+  const existing = db.select().from(athletes).where(eq(athletes.id, id)).get()
   if (!existing) return null
 
   const now = new Date().toISOString()
-  const updated = await db.update(athletes).set({
+  const updated = db.update(athletes).set({
     ...(req.name !== undefined && { name: req.name }),
     ...(req.email !== undefined && { email: req.email }),
     ...(req.experienceYears !== undefined && { experienceYears: req.experienceYears }),
@@ -108,26 +108,26 @@ export async function updateAthlete(id: number, req: UpdateAthleteRequest): Prom
   return toDto(updated)
 }
 
-export async function addCoachNote(id: number, note: string): Promise<AthleteDto | null> {
-  const existing = await db.select().from(athletes).where(eq(athletes.id, id)).get()
+export function addCoachNote(id: number, note: string): AthleteDto | null {
+  const existing = db.select().from(athletes).where(eq(athletes.id, id)).get()
   if (!existing) return null
 
   const newNotes = existing.coachNotes
     ? `${existing.coachNotes}\n${note}`
     : note
 
-  const updated = await db.update(athletes).set({
+  const updated = db.update(athletes).set({
     coachNotes: newNotes,
     updatedAt: new Date().toISOString(),
   }).where(eq(athletes.id, id)).returning().get()
   return toDto(updated)
 }
 
-export async function linkStravaAthlete(internalAthleteId: number, stravaAthleteId: number): Promise<boolean> {
-  const existing = await db.select().from(athletes).where(eq(athletes.id, internalAthleteId)).get()
+export function linkStravaAthlete(internalAthleteId: number, stravaAthleteId: number): boolean {
+  const existing = db.select().from(athletes).where(eq(athletes.id, internalAthleteId)).get()
   if (!existing) return false
 
-  await db.update(athletes).set({
+  db.update(athletes).set({
     stravaAthleteId,
     stravaEnabled: true,
     updatedAt: new Date().toISOString(),
@@ -135,9 +135,9 @@ export async function linkStravaAthlete(internalAthleteId: number, stravaAthlete
   return true
 }
 
-export async function deleteAthlete(id: number): Promise<boolean> {
-  const existing = await db.select().from(athletes).where(eq(athletes.id, id)).get()
+export function deleteAthlete(id: number): boolean {
+  const existing = db.select().from(athletes).where(eq(athletes.id, id)).get()
   if (!existing) return false
-  await db.delete(athletes).where(eq(athletes.id, id)).run()
+  db.delete(athletes).where(eq(athletes.id, id)).run()
   return true
 }
