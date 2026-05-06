@@ -1,7 +1,5 @@
 import axios from 'axios'
-import { db } from '../db/client.js'
-import { stravaActivities } from '../db/schema.js'
-import { eq, and, inArray, gte, lte } from 'drizzle-orm'
+import { queryRows, run, saveDb } from '../db/client.js'
 import { getValidToken, getValidTokenForAthlete } from './stravaOAuthService.js'
 import type { ActivityDto, SyncResultDto, PagedResponse } from '../types/index.js'
 
@@ -13,25 +11,30 @@ function toDistanceKm(distanceM: number | null | undefined): number {
   return Math.round((distanceM / 1000) * 100) / 100
 }
 
-function toDto(row: typeof stravaActivities.$inferSelect): ActivityDto {
+function toDto(row: Record<string, unknown>): ActivityDto {
   return {
-    id: row.id,
-    stravaId: row.stravaId,
-    name: row.name ?? null,
-    sportType: row.sportType ?? null,
-    activityDate: row.activityDate,
-    startDatetime: row.startDatetime ?? null,
-    distanceKm: toDistanceKm(row.distanceM),
-    movingTimeS: row.movingTimeS ?? null,
-    totalElevationM: row.totalElevationM ?? null,
-    averageHeartrate: row.averageHeartrate ?? null,
+    id: row.id as number,
+    stravaId: row.strava_id as number,
+    name: (row.name as string | null) ?? null,
+    sportType: (row.sport_type as string | null) ?? null,
+    activityDate: row.activity_date as string,
+    startDatetime: (row.start_datetime as string | null) ?? null,
+    distanceKm: toDistanceKm(row.distance_m as number | null),
+    movingTimeS: (row.moving_time_s as number | null) ?? null,
+    totalElevationM: (row.total_elevation_m as number | null) ?? null,
+    averageHeartrate: (row.average_heartrate as number | null) ?? null,
   }
 }
 
-function parseActivity(data: Record<string, unknown>, stravaAthleteId: number, internalAthleteId?: number) {
+function parseActivity(
+  data: Record<string, unknown>,
+  stravaAthleteId: number,
+  internalAthleteId?: number
+) {
   const startDateStr =
     (data.start_date_local as string | undefined) ??
-    (data.start_date as string | undefined) ?? ''
+    (data.start_date as string | undefined) ??
+    ''
   const startDt = startDateStr.replace('Z', '')
   const activityDate = startDt.substring(0, 10)
 
@@ -40,7 +43,8 @@ function parseActivity(data: Record<string, unknown>, stravaAthleteId: number, i
     athleteId: stravaAthleteId,
     internalAthleteId: internalAthleteId ?? null,
     name: (data.name as string | undefined) ?? null,
-    sportType: (data.sport_type as string | undefined) ?? (data.type as string | undefined) ?? null,
+    sportType:
+      (data.sport_type as string | undefined) ?? (data.type as string | undefined) ?? null,
     activityDate,
     startDatetime: startDt || null,
     distanceM: (data.distance as number | undefined) ?? null,
@@ -51,8 +55,8 @@ function parseActivity(data: Record<string, unknown>, stravaAthleteId: number, i
     maxSpeed: (data.max_speed as number | undefined) ?? null,
     averageHeartrate: (data.average_heartrate as number | undefined) ?? null,
     maxHeartrate: (data.max_heartrate as number | undefined) ?? null,
-    trainer: (data.trainer as boolean | undefined) ?? false,
-    manual: (data.manual as boolean | undefined) ?? false,
+    trainer: (data.trainer as boolean | undefined) ? 1 : 0,
+    manual: (data.manual as boolean | undefined) ? 1 : 0,
   }
 }
 
@@ -68,7 +72,7 @@ export async function syncActivities(): Promise<SyncResultDto> {
   while (true) {
     const resp = await axios.get<unknown[]>(
       `${STRAVA_API_BASE}/athlete/activities?per_page=100&page=${page}`,
-      { headers: { Authorization: `Bearer ${token.accessToken}` } }
+      { headers: { Authorization: `Bearer ${token.access_token}` } }
     )
     const activities = resp.data as Record<string, unknown>[]
     if (!activities || activities.length === 0) break
@@ -76,20 +80,28 @@ export async function syncActivities(): Promise<SyncResultDto> {
     for (const activity of activities) {
       const sportType =
         (activity.sport_type as string | undefined) ??
-        (activity.type as string | undefined) ?? ''
-      if (!RUNNING_SPORT_TYPES.slice(0, 2).includes(sportType)) continue
+        (activity.type as string | undefined) ??
+        ''
+      if (!['Run', 'TrailRun'].includes(sportType)) continue
 
       const stravaId = Number(activity.id)
-      const existing = db
-        .select()
-        .from(stravaActivities)
-        .where(eq(stravaActivities.stravaId, stravaId))
-        .get()
-      if (!existing) {
+      const existing = queryRows(
+        'SELECT id FROM strava_activities WHERE strava_id = ?',
+        [stravaId]
+      )
+      if (existing.length === 0) {
         try {
-          db.insert(stravaActivities)
-            .values(parseActivity(activity, token.athleteId))
-            .run()
+          const p = parseActivity(activity, token.athlete_id)
+          run(
+            `INSERT INTO strava_activities (strava_id, athlete_id, internal_athlete_id, name, sport_type, activity_date, start_datetime, distance_m, moving_time_s, elapsed_time_s, total_elevation_m, average_speed, max_speed, average_heartrate, max_heartrate, trainer, manual)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            [
+              p.stravaId, p.athleteId, p.internalAthleteId, p.name, p.sportType,
+              p.activityDate, p.startDatetime, p.distanceM, p.movingTimeS,
+              p.elapsedTimeS, p.totalElevationM, p.averageSpeed, p.maxSpeed,
+              p.averageHeartrate, p.maxHeartrate, p.trainer, p.manual,
+            ]
+          )
           totalSynced++
         } catch {
           // skip duplicates
@@ -101,6 +113,7 @@ export async function syncActivities(): Promise<SyncResultDto> {
     page++
   }
 
+  saveDb()
   return { syncedCount: totalSynced, message: `Successfully synced ${totalSynced} new activities` }
 }
 
@@ -129,7 +142,7 @@ export async function syncActivitiesForAthlete(
       : `${STRAVA_API_BASE}/athlete/activities?per_page=100&page=${page}`
 
     const resp = await axios.get<unknown[]>(url, {
-      headers: { Authorization: `Bearer ${token.accessToken}` },
+      headers: { Authorization: `Bearer ${token.access_token}` },
     })
     const activities = resp.data as Record<string, unknown>[]
     if (!activities || activities.length === 0) break
@@ -137,30 +150,38 @@ export async function syncActivitiesForAthlete(
     for (const activity of activities) {
       const sportType =
         (activity.sport_type as string | undefined) ??
-        (activity.type as string | undefined) ?? ''
+        (activity.type as string | undefined) ??
+        ''
       if (!['Run', 'TrailRun'].includes(sportType)) continue
 
       const stravaId = Number(activity.id)
-      const existing = db
-        .select()
-        .from(stravaActivities)
-        .where(eq(stravaActivities.stravaId, stravaId))
-        .get()
+      const existing = queryRows(
+        'SELECT id, internal_athlete_id FROM strava_activities WHERE strava_id = ?',
+        [stravaId]
+      )
 
-      if (!existing) {
+      if (existing.length === 0) {
         try {
-          db.insert(stravaActivities)
-            .values(parseActivity(activity, token.athleteId, internalAthleteId))
-            .run()
+          const p = parseActivity(activity, token.athlete_id, internalAthleteId)
+          run(
+            `INSERT INTO strava_activities (strava_id, athlete_id, internal_athlete_id, name, sport_type, activity_date, start_datetime, distance_m, moving_time_s, elapsed_time_s, total_elevation_m, average_speed, max_speed, average_heartrate, max_heartrate, trainer, manual)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            [
+              p.stravaId, p.athleteId, p.internalAthleteId, p.name, p.sportType,
+              p.activityDate, p.startDatetime, p.distanceM, p.movingTimeS,
+              p.elapsedTimeS, p.totalElevationM, p.averageSpeed, p.maxSpeed,
+              p.averageHeartrate, p.maxHeartrate, p.trainer, p.manual,
+            ]
+          )
           totalSynced++
         } catch {
           // skip
         }
-      } else if (existing.internalAthleteId !== internalAthleteId) {
-        db.update(stravaActivities)
-          .set({ internalAthleteId })
-          .where(eq(stravaActivities.id, existing.id))
-          .run()
+      } else if ((existing[0].internal_athlete_id as number | null) !== internalAthleteId) {
+        run(
+          'UPDATE strava_activities SET internal_athlete_id = ? WHERE id = ?',
+          [internalAthleteId, existing[0].id as number]
+        )
         totalSynced++
       }
     }
@@ -169,21 +190,19 @@ export async function syncActivitiesForAthlete(
     page++
   }
 
+  saveDb()
   return { syncedCount: totalSynced, message: `Successfully synced ${totalSynced} new activities` }
 }
 
 export function getActivities(page: number, size: number): PagedResponse<ActivityDto> {
-  const all = db
-    .select()
-    .from(stravaActivities)
-    .where(inArray(stravaActivities.sportType, RUNNING_SPORT_TYPES))
-    .all()
-    .sort((a, b) => b.activityDate.localeCompare(a.activityDate))
-
+  const placeholders = RUNNING_SPORT_TYPES.map(() => '?').join(',')
+  const all = queryRows(
+    `SELECT * FROM strava_activities WHERE sport_type IN (${placeholders}) ORDER BY activity_date DESC`,
+    RUNNING_SPORT_TYPES
+  )
   const totalElements = all.length
   const totalPages = Math.ceil(totalElements / size)
   const content = all.slice(page * size, page * size + size).map(toDto)
-
   return { content, totalElements, totalPages, number: page, size }
 }
 
@@ -192,22 +211,14 @@ export function getActivitiesForAthlete(
   page: number,
   size: number
 ): PagedResponse<ActivityDto> {
-  const all = db
-    .select()
-    .from(stravaActivities)
-    .where(
-      and(
-        eq(stravaActivities.internalAthleteId, internalAthleteId),
-        inArray(stravaActivities.sportType, RUNNING_SPORT_TYPES)
-      )
-    )
-    .all()
-    .sort((a, b) => b.activityDate.localeCompare(a.activityDate))
-
+  const placeholders = RUNNING_SPORT_TYPES.map(() => '?').join(',')
+  const all = queryRows(
+    `SELECT * FROM strava_activities WHERE internal_athlete_id = ? AND sport_type IN (${placeholders}) ORDER BY activity_date DESC`,
+    [internalAthleteId, ...RUNNING_SPORT_TYPES]
+  )
   const totalElements = all.length
   const totalPages = Math.ceil(totalElements / size)
   const content = all.slice(page * size, page * size + size).map(toDto)
-
   return { content, totalElements, totalPages, number: page, size }
 }
 
@@ -215,18 +226,15 @@ export function getActivitiesByDateRange(
   internalAthleteId: number,
   startDate: string,
   endDate: string
-): typeof stravaActivities.$inferSelect[] {
-  return db
-    .select()
-    .from(stravaActivities)
-    .where(
-      and(
-        eq(stravaActivities.internalAthleteId, internalAthleteId),
-        gte(stravaActivities.activityDate, startDate),
-        lte(stravaActivities.activityDate, endDate)
-      )
-    )
-    .all()
-    .filter((a) => RUNNING_SPORT_TYPES.includes(a.sportType ?? ''))
-    .sort((a, b) => a.activityDate.localeCompare(b.activityDate))
+): Record<string, unknown>[] {
+  const placeholders = RUNNING_SPORT_TYPES.map(() => '?').join(',')
+  return queryRows(
+    `SELECT * FROM strava_activities
+     WHERE internal_athlete_id = ?
+       AND activity_date >= ?
+       AND activity_date <= ?
+       AND sport_type IN (${placeholders})
+     ORDER BY activity_date`,
+    [internalAthleteId, startDate, endDate, ...RUNNING_SPORT_TYPES]
+  )
 }

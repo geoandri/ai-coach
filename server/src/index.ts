@@ -1,4 +1,4 @@
-import { runMigrations } from './db/client.js'
+import { initDb, runMigrations } from './db/client.js'
 import { buildApp } from './app.js'
 import { spawn } from 'child_process'
 import { join, dirname } from 'path'
@@ -12,10 +12,11 @@ const PORT = Number(process.env.PORT ?? 3000)
 const MCP_PORT = Number(process.env.MCP_PORT ?? 3001)
 
 async function main() {
-  // 1. Run database migrations
-  console.log('Running migrations...')
+  // 1. Initialize and migrate database
+  console.log('Initializing database...')
+  await initDb()
   runMigrations()
-  console.log('Migrations complete.')
+  console.log('Database ready.')
 
   // 2. Start Fastify
   const app = await buildApp()

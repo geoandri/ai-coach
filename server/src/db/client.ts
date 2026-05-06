@@ -1,13 +1,8 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import * as schema from './schema.js'
+import initSqlJs, { type Database, type SqlValue } from 'sql.js'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { mkdirSync } from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
 
 const dbPath = process.env.DATABASE_PATH ?? './data/ai_coach.db'
 
@@ -17,13 +12,80 @@ if (dataDir && dataDir !== '.') {
   mkdirSync(dataDir, { recursive: true })
 }
 
-const sqlite = new Database(dbPath)
-sqlite.pragma('journal_mode = WAL')
-sqlite.pragma('foreign_keys = ON')
+let _db: Database
 
-export const db = drizzle(sqlite, { schema })
+export function getDb(): Database {
+  return _db
+}
 
-export function runMigrations() {
-  const migrationsFolder = join(__dirname, 'migrations')
-  migrate(db, { migrationsFolder })
+export function saveDb(): void {
+  const data = _db.export()
+  writeFileSync(dbPath, Buffer.from(data))
+}
+
+export async function initDb(): Promise<void> {
+  const SQL = await initSqlJs()
+  if (existsSync(dbPath)) {
+    const fileBuffer = readFileSync(dbPath)
+    _db = new SQL.Database(fileBuffer)
+  } else {
+    _db = new SQL.Database()
+  }
+  _db.run('PRAGMA journal_mode = WAL;')
+  _db.run('PRAGMA foreign_keys = ON;')
+}
+
+export function runMigrations(): void {
+  const sqlPath = new URL('./migrations/schema.sql', import.meta.url).pathname
+  const sql = readFileSync(sqlPath, 'utf8')
+  // Split on drizzle-kit statement-breakpoint comments and semicolons
+  const statements = sql
+    .split(/^--> statement-breakpoint$/m)
+    .flatMap((chunk) => chunk.split(';'))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+
+  for (const stmt of statements) {
+    try {
+      _db.run(stmt)
+    } catch {
+      // Ignore "already exists" errors for idempotency
+    }
+  }
+  saveDb()
+}
+
+// Convenience helpers used across all services
+export type Param = number | string | null | boolean
+export type Params = Param[]
+
+function toSqlValues(params: Params): SqlValue[] {
+  return params.map((p) => (typeof p === 'boolean' ? (p ? 1 : 0) : p)) as SqlValue[]
+}
+
+export function queryRows(sql: string, params: Params = []): Record<string, unknown>[] {
+  const stmt = _db.prepare(sql)
+  const rows: Record<string, unknown>[] = []
+  if (params.length > 0) stmt.bind(toSqlValues(params))
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject() as Record<string, unknown>)
+  }
+  stmt.free()
+  return rows
+}
+
+export function queryOne(sql: string, params: Params = []): Record<string, unknown> | null {
+  return queryRows(sql, params)[0] ?? null
+}
+
+export function run(sql: string, params: Params = []): void {
+  if (params.length > 0) {
+    _db.run(sql, toSqlValues(params))
+  } else {
+    _db.run(sql)
+  }
+}
+
+export function lastInsertId(): number {
+  return _db.exec('SELECT last_insert_rowid()')[0].values[0][0] as number
 }

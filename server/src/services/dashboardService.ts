@@ -1,43 +1,44 @@
-import { db } from '../db/client.js'
-import { trainingPlans, weeklyBlocks } from '../db/schema.js'
-import { eq } from 'drizzle-orm'
+import { queryRows, queryOne } from '../db/client.js'
 import { getActivitiesByDateRange } from './stravaActivityService.js'
 import type { DashboardSummaryDto, WeekAdherenceDto } from '../types/index.js'
 
 function buildDashboard(planId: number, athleteId: number): DashboardSummaryDto {
-  const weeks = db
-    .select()
-    .from(weeklyBlocks)
-    .where(eq(weeklyBlocks.trainingPlanId, planId))
-    .all()
-    .sort((a, b) => a.weekNumber - b.weekNumber)
-
+  const weeks = queryRows(
+    'SELECT * FROM weekly_blocks WHERE training_plan_id = ? ORDER BY week_number',
+    [planId]
+  )
   const today = new Date().toISOString().substring(0, 10)
 
   const weekAdherences: WeekAdherenceDto[] = weeks.map((week) => {
-    const activities = getActivitiesByDateRange(athleteId, week.startDate, week.endDate)
+    const activities = getActivitiesByDateRange(
+      athleteId,
+      week.start_date as string,
+      week.end_date as string
+    )
 
-    const actualKm =
-      activities.reduce((sum, a) => sum + (a.distanceM ? a.distanceM / 1000 : 0), 0)
-    const actualVertM = activities.reduce(
-      (sum, a) => sum + (a.totalElevationM ?? 0),
+    const actualKm = activities.reduce(
+      (sum, a) => sum + (a.distance_m ? (a.distance_m as number) / 1000 : 0),
       0
     )
-    const plannedKm = week.plannedKm ?? 0
-    const plannedVertM = week.plannedVertM ?? 0
+    const actualVertM = activities.reduce(
+      (sum, a) => sum + ((a.total_elevation_m as number | null) ?? 0),
+      0
+    )
+    const plannedKm = (week.planned_km as number | null) ?? 0
+    const plannedVertM = (week.planned_vert_m as number | null) ?? 0
 
-    const adherence = plannedKm > 0
-      ? Math.min((actualKm / plannedKm) * 100, 200)
-      : 0
+    const adherence = plannedKm > 0 ? Math.min((actualKm / plannedKm) * 100, 200) : 0
 
-    const isCurrentWeek = today >= week.startDate && today <= week.endDate
-    const isFutureWeek = today < week.startDate
+    const startDate = week.start_date as string
+    const endDate = week.end_date as string
+    const isCurrentWeek = today >= startDate && today <= endDate
+    const isFutureWeek = today < startDate
 
     return {
-      weekNumber: week.weekNumber,
-      phase: week.phase ?? null,
-      startDate: week.startDate,
-      endDate: week.endDate,
+      weekNumber: week.week_number as number,
+      phase: (week.phase as string | null) ?? null,
+      startDate,
+      endDate,
       plannedKm,
       actualKm: Math.round(actualKm * 100) / 100,
       plannedVertM,
@@ -65,17 +66,13 @@ function buildDashboard(planId: number, athleteId: number): DashboardSummaryDto 
 }
 
 export function getDashboardSummary(): DashboardSummaryDto {
-  const plan = db.select().from(trainingPlans).all().sort((a, b) => a.id - b.id)[0]
+  const plan = queryOne('SELECT * FROM training_plans ORDER BY id LIMIT 1')
   if (!plan) return { weeks: [], currentWeekNumber: null, totalPlannedKm: 0, totalActualKm: 0 }
-  return buildDashboard(plan.id, plan.athleteId ?? 0)
+  return buildDashboard(plan.id as number, (plan.athlete_id as number | null) ?? 0)
 }
 
 export function getDashboardSummaryForAthlete(athleteId: number): DashboardSummaryDto {
-  const plan = db
-    .select()
-    .from(trainingPlans)
-    .where(eq(trainingPlans.athleteId, athleteId))
-    .get()
+  const plan = queryOne('SELECT * FROM training_plans WHERE athlete_id = ? LIMIT 1', [athleteId])
   if (!plan) return { weeks: [], currentWeekNumber: null, totalPlannedKm: 0, totalActualKm: 0 }
-  return buildDashboard(plan.id, athleteId)
+  return buildDashboard(plan.id as number, athleteId)
 }

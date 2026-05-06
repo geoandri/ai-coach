@@ -1,10 +1,7 @@
 import PdfPrinter from 'pdfmake'
-import { db } from '../db/client.js'
-import { trainingPlans, weeklyBlocks, dailyWorkouts } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { queryRows, queryOne } from '../db/client.js'
 import type { TDocumentDefinitions, TableCell, Content } from 'pdfmake/interfaces.js'
 
-// pdfmake requires virtual fonts for node
 const fonts = {
   Helvetica: {
     normal: 'Helvetica',
@@ -28,19 +25,16 @@ function getPhaseColor(phase: string | null): string {
 }
 
 export function generateQuickReferencePdf(athleteId: number, planId: number): Promise<Buffer> | null {
-  const plan = db
-    .select()
-    .from(trainingPlans)
-    .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
-    .get()
+  const plan = queryOne(
+    'SELECT * FROM training_plans WHERE id = ? AND athlete_id = ?',
+    [planId, athleteId]
+  )
   if (!plan) return null
 
-  const weeks = db
-    .select()
-    .from(weeklyBlocks)
-    .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all()
-    .sort((a, b) => a.weekNumber - b.weekNumber)
+  const weeks = queryRows(
+    'SELECT * FROM weekly_blocks WHERE training_plan_id = ? ORDER BY week_number',
+    [plan.id as number]
+  )
 
   const printer = new PdfPrinter(fonts)
 
@@ -56,25 +50,28 @@ export function generateQuickReferencePdf(athleteId: number, planId: number): Pr
   ]
 
   for (const week of weeks) {
-    const fillColor = getPhaseColor(week.phase)
+    const phase = (week.phase as string | null) ?? null
+    const fillColor = getPhaseColor(phase)
+    const plannedKm = week.planned_km as number | null
+    const plannedVertM = week.planned_vert_m as number | null
     tableBody.push([
-      { text: String(week.weekNumber), fillColor },
-      { text: week.phase ?? '', fillColor, color: '#e65100', bold: true },
-      { text: `${week.startDate} – ${week.endDate}`, fillColor },
-      { text: week.plannedKm != null ? String(week.plannedKm) : '—', fillColor, alignment: 'right' },
-      { text: week.plannedVertM != null ? String(week.plannedVertM) : '—', fillColor, alignment: 'right' },
-      { text: week.notes ?? '', fillColor },
+      { text: String(week.week_number), fillColor },
+      { text: phase ?? '', fillColor, color: '#e65100', bold: true },
+      { text: `${week.start_date} – ${week.end_date}`, fillColor },
+      { text: plannedKm != null ? String(plannedKm) : '—', fillColor, alignment: 'right' },
+      { text: plannedVertM != null ? String(plannedVertM) : '—', fillColor, alignment: 'right' },
+      { text: (week.notes as string | null) ?? '', fillColor },
     ])
   }
 
-  const raceInfo = plan.raceName
-    ? `${plan.raceName}${plan.raceDate ? ` — ${plan.raceDate}` : ''}`
-    : ''
+  const raceName = plan.race_name as string | null
+  const raceDate = plan.race_date as string | null
+  const raceInfo = raceName ? `${raceName}${raceDate ? ` — ${raceDate}` : ''}` : ''
 
   const docDef: TDocumentDefinitions = {
     defaultStyle: { font: 'Helvetica', fontSize: 8 },
     content: [
-      { text: plan.name, style: 'header' },
+      { text: plan.name as string, style: 'header' },
       { text: raceInfo, style: 'subheader' },
       {
         table: {
@@ -103,28 +100,25 @@ export function generateQuickReferencePdf(athleteId: number, planId: number): Pr
 }
 
 export function generateFullPdf(athleteId: number, planId: number): Promise<Buffer> | null {
-  const plan = db
-    .select()
-    .from(trainingPlans)
-    .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.athleteId, athleteId)))
-    .get()
+  const plan = queryOne(
+    'SELECT * FROM training_plans WHERE id = ? AND athlete_id = ?',
+    [planId, athleteId]
+  )
   if (!plan) return null
 
-  const weeks = db
-    .select()
-    .from(weeklyBlocks)
-    .where(eq(weeklyBlocks.trainingPlanId, plan.id))
-    .all()
-    .sort((a, b) => a.weekNumber - b.weekNumber)
+  const weeks = queryRows(
+    'SELECT * FROM weekly_blocks WHERE training_plan_id = ? ORDER BY week_number',
+    [plan.id as number]
+  )
 
   const printer = new PdfPrinter(fonts)
   const content: Content[] = []
 
-  const raceInfo = plan.raceName
-    ? `${plan.raceName}${plan.raceDate ? ` — ${plan.raceDate}` : ''}`
-    : ''
+  const raceName = plan.race_name as string | null
+  const raceDate = plan.race_date as string | null
+  const raceInfo = raceName ? `${raceName}${raceDate ? ` — ${raceDate}` : ''}` : ''
 
-  content.push({ text: plan.name, style: 'header' })
+  content.push({ text: plan.name as string, style: 'header' })
   content.push({ text: raceInfo, style: 'subheader' })
 
   for (let idx = 0; idx < weeks.length; idx++) {
@@ -134,28 +128,30 @@ export function generateFullPdf(athleteId: number, planId: number): Promise<Buff
       content.push({ text: '', pageBreak: 'before' } as Content)
     }
 
-    const fillColor = getPhaseColor(week.phase)
+    const phase = (week.phase as string | null) ?? null
+    const fillColor = getPhaseColor(phase)
+    const plannedKm = week.planned_km as number | null
+    const plannedVertM = week.planned_vert_m as number | null
+
     content.push({
-      text: `Week ${week.weekNumber} — ${week.phase ?? ''}`,
+      text: `Week ${week.week_number} — ${phase ?? ''}`,
       style: 'weekHeader',
       fillColor,
     } as Content)
 
     content.push({
-      text: `${week.startDate} – ${week.endDate} | Planned: ${week.plannedKm ?? 0} km / ${week.plannedVertM ?? 0}m vert`,
+      text: `${week.start_date} – ${week.end_date} | Planned: ${plannedKm ?? 0} km / ${plannedVertM ?? 0}m vert`,
       style: 'weekMeta',
     } as Content)
 
     if (week.notes) {
-      content.push({ text: week.notes, style: 'weekNotes' } as Content)
+      content.push({ text: week.notes as string, style: 'weekNotes' } as Content)
     }
 
-    const workouts = db
-      .select()
-      .from(dailyWorkouts)
-      .where(eq(dailyWorkouts.weeklyBlockId, week.id))
-      .all()
-      .sort((a, b) => a.workoutDate.localeCompare(b.workoutDate))
+    const workouts = queryRows(
+      'SELECT * FROM daily_workouts WHERE weekly_block_id = ? ORDER BY workout_date',
+      [week.id as number]
+    )
 
     const tableBody: TableCell[][] = [
       [
@@ -169,23 +165,27 @@ export function generateFullPdf(athleteId: number, planId: number): Promise<Buff
     ]
 
     for (const workout of workouts) {
-      const rowColor = workout.isRaceDay ? '#ffcdd2' : workout.isRestDay ? '#f5f5f5' : undefined
-      const textColor = workout.isRaceDay ? '#e65100' : workout.isRestDay ? '#999' : '#333'
+      const isRaceDay = Boolean(workout.is_race_day)
+      const isRestDay = Boolean(workout.is_rest_day)
+      const rowColor = isRaceDay ? '#ffcdd2' : isRestDay ? '#f5f5f5' : undefined
+      const textColor = isRaceDay ? '#e65100' : isRestDay ? '#999' : '#333'
+      const wPlannedKm = workout.planned_km as number | null
+      const wPlannedVertM = workout.planned_vert_m as number | null
 
       tableBody.push([
-        { text: workout.dayOfWeek ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }), italics: workout.isRestDay },
-        { text: workout.workoutDate, color: textColor, ...(rowColor && { fillColor: rowColor }) },
-        { text: workout.workoutType ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }), bold: workout.isRaceDay },
-        { text: workout.description ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }) },
+        { text: (workout.day_of_week as string | null) ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }), italics: isRestDay },
+        { text: workout.workout_date as string, color: textColor, ...(rowColor && { fillColor: rowColor }) },
+        { text: (workout.workout_type as string | null) ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }), bold: isRaceDay },
+        { text: (workout.description as string | null) ?? '', color: textColor, ...(rowColor && { fillColor: rowColor }) },
         {
-          text: (workout.plannedKm ?? 0) > 0 ? String(workout.plannedKm) : '—',
+          text: (wPlannedKm ?? 0) > 0 ? String(wPlannedKm) : '—',
           alignment: 'right',
           bold: true,
           color: textColor,
           ...(rowColor && { fillColor: rowColor }),
         },
         {
-          text: (workout.plannedVertM ?? 0) > 0 ? String(workout.plannedVertM) : '—',
+          text: (wPlannedVertM ?? 0) > 0 ? String(wPlannedVertM) : '—',
           alignment: 'right',
           color: textColor,
           ...(rowColor && { fillColor: rowColor }),

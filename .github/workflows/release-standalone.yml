@@ -9,15 +9,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux-x64
-          - os: macos-latest
-            platform: macos-arm64
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -54,7 +46,8 @@ jobs:
           npm ci
           npm run build
 
-      # ── Install server prod deps (compiles native better-sqlite3 for this OS) ──
+      # ── Install server prod deps ──────────────────────────────────────────
+      # sql.js is pure WASM — no native binaries, works on any platform
       - name: Install server production dependencies
         working-directory: server
         run: npm ci --omit=dev
@@ -68,7 +61,6 @@ jobs:
       - name: Assemble release directory
         run: |
           TAG="${GITHUB_REF_NAME}"
-          PLATFORM="${{ matrix.platform }}"
           RELEASE_DIR="ai-coach-standalone"
 
           mkdir -p "${RELEASE_DIR}/mcp"
@@ -76,7 +68,7 @@ jobs:
           # Server compiled JS
           cp -r server/dist "${RELEASE_DIR}/dist"
 
-          # Server prod node_modules (includes platform-native better-sqlite3)
+          # Server prod node_modules (pure JS/WASM, works on all platforms)
           cp -r server/node_modules "${RELEASE_DIR}/node_modules"
 
           # Server package.json (needed for "type": "module")
@@ -106,9 +98,12 @@ jobs:
           ## Quick Start
 
           1. Copy `.env.example` to `.env` and fill in your Strava credentials.
-          2. Create the data directory: `mkdir -p data`
-          3. Start the server: `node dist/index.js`
-          4. Open http://localhost:3000
+          2. Start the server: `node dist/index.js`
+          3. Open http://localhost:3000
+
+          ## Requirements
+
+          Node.js 18 or later. No native dependencies — works on macOS, Linux, and Windows.
 
           ## Environment Variables
 
@@ -120,13 +115,13 @@ jobs:
           Change with `DATABASE_PATH` env var.
           EOF
 
-          tar -czf "ai-coach-standalone-${TAG}-${PLATFORM}.tar.gz" "${RELEASE_DIR}/"
+          tar -czf "ai-coach-standalone-${TAG}.tar.gz" "${RELEASE_DIR}/"
 
       # ── Upload artifact on every push (CI) ───────────────────────────────
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-coach-standalone-${{ matrix.platform }}
+          name: ai-coach-standalone
           path: ai-coach-standalone-*.tar.gz
           retention-days: 7
 
