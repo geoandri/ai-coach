@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import * as athleteService from '../services/athleteService.js'
 import * as trainingPlanService from '../services/trainingPlanService.js'
 import * as planDiffService from '../services/planDiffService.js'
-import * as pdfExportService from '../services/pdfExportService.js'
 import * as stravaOAuthService from '../services/stravaOAuthService.js'
 import * as stravaActivityService from '../services/stravaActivityService.js'
 import * as dashboardService from '../services/dashboardService.js'
@@ -124,39 +123,6 @@ export async function athleteRoutes(app: FastifyInstance) {
       )
       if ('error' in result) return reply.code(result.status).send({ error: result.error })
       return result
-    }
-  )
-
-  // ── PDF Export ────────────────────────────────────────────────────────────
-  app.get<{ Params: { id: string; planId: string } }>(
-    '/api/athletes/:id/training-plans/:planId/export/pdf/quick',
-    async (request, reply) => {
-      const pdf = await pdfExportService.generateQuickReferencePdf(
-        Number(request.params.id),
-        Number(request.params.planId)
-      )
-      if (!pdf) return reply.code(404).send({ error: 'Plan not found' })
-      return reply
-        .code(200)
-        .header('Content-Type', 'application/pdf')
-        .header('Content-Disposition', 'attachment; filename="training-plan-quick.pdf"')
-        .send(pdf)
-    }
-  )
-
-  app.get<{ Params: { id: string; planId: string } }>(
-    '/api/athletes/:id/training-plans/:planId/export/pdf/full',
-    async (request, reply) => {
-      const pdf = await pdfExportService.generateFullPdf(
-        Number(request.params.id),
-        Number(request.params.planId)
-      )
-      if (!pdf) return reply.code(404).send({ error: 'Plan not found' })
-      return reply
-        .code(200)
-        .header('Content-Type', 'application/pdf')
-        .header('Content-Disposition', 'attachment; filename="training-plan-full.pdf"')
-        .send(pdf)
     }
   )
 

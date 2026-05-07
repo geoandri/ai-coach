@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAthletePlan } from '../hooks/useAthletePlan'
 import { WeekAccordion } from '../components/WeekAccordion'
-import { athleteApi } from '../api/athleteApi'
 
 function isCurrentWeek(startDate: string, endDate: string): boolean {
   const today = new Date().toISOString().slice(0, 10)
@@ -13,23 +11,6 @@ export default function AthletePlanView() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
   const { data, loading, error } = useAthletePlan(id)
-  const [downloading, setDownloading] = useState<'quick' | 'full' | null>(null)
-
-  const handleDownload = async (type: 'quick' | 'full') => {
-    if (!id || !data) return
-    setDownloading(type)
-    try {
-      if (type === 'quick') {
-        await athleteApi.downloadQuickPdf(id, data.id)
-      } else {
-        await athleteApi.downloadFullPdf(id, data.id)
-      }
-    } catch (e) {
-      console.error('PDF download failed', e)
-    } finally {
-      setDownloading(null)
-    }
-  }
 
   if (loading) return <div className="text-gray-400 text-center py-20">Loading training plan...</div>
   if (error) return <p className="text-red-400 text-center py-20">{error}</p>
@@ -49,22 +30,6 @@ export default function AthletePlanView() {
             {data.raceName && <span>🏁 {data.raceName} — {data.raceDate}</span>}
             {data.tuneUpRaceName && <span>⚡ {data.tuneUpRaceName} — {data.tuneUpRaceDate}</span>}
           </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleDownload('quick')}
-            disabled={downloading !== null}
-            className="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800/50 text-sm text-gray-300 rounded-lg transition-colors"
-          >
-            {downloading === 'quick' ? 'Generating...' : 'Quick PDF'}
-          </button>
-          <button
-            onClick={() => handleDownload('full')}
-            disabled={downloading !== null}
-            className="px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-sm text-white rounded-lg transition-colors"
-          >
-            {downloading === 'full' ? 'Generating...' : 'Full Plan PDF'}
-          </button>
         </div>
       </div>
       <div>
