@@ -112,8 +112,7 @@ export default function LandingPage() {
 
       {/* Personas */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-1">Available coach personas</h2>
-        <p className="text-gray-400 text-sm mb-4">
+        <h2 className="text-lg font-semibold text-white mb-1">Available coach personas</h2>        <p className="text-gray-400 text-sm mb-4">
           Each persona defines a coaching role, information-gathering workflow, and plan generation
           logic for a specific sport. They are served automatically by the MCP server from{' '}
           <code className="text-orange-400 text-xs">docs/personas/</code>.
@@ -149,6 +148,20 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-400 mb-2">Disclaimer</h2>
+        <p className="text-gray-500 text-xs leading-relaxed">
+          AI Coach uses large language models to generate training plans and coaching advice.
+          The output is intended as a starting point and a coaching aid —{' '}
+          <span className="text-gray-400">not a substitute for professional advice from a
+          certified coach, physician, or physiotherapist</span>. Always use your own judgement
+          before following any training recommendation. If you have a medical condition, injury,
+          or health concern, consult a qualified professional before starting or modifying a
+          training programme.
+        </p>
       </div>
 
     </div>
