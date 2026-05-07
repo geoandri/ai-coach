@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAthletePlan } from '../hooks/useAthletePlan'
 import { WeekAccordion } from '../components/WeekAccordion'
+import { athleteApi } from '../api/athleteApi'
 
 function isCurrentWeek(startDate: string, endDate: string): boolean {
   const today = new Date().toISOString().slice(0, 10)
@@ -11,6 +13,19 @@ export default function AthletePlanView() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
   const { data, loading, error } = useAthletePlan(id)
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    if (!id || !data) return
+    setDownloading(true)
+    try {
+      await athleteApi.downloadFullPdf(id, data.id)
+    } catch (e) {
+      console.error('PDF download failed', e)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   if (loading) return <div className="text-gray-400 text-center py-20">Loading training plan...</div>
   if (error) return <p className="text-red-400 text-center py-20">{error}</p>
@@ -31,6 +46,13 @@ export default function AthletePlanView() {
             {data.tuneUpRaceName && <span>⚡ {data.tuneUpRaceName} — {data.tuneUpRaceDate}</span>}
           </div>
         </div>
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-sm text-white rounded-lg transition-colors"
+        >
+          {downloading ? 'Generating...' : 'Full Plan PDF'}
+        </button>
       </div>
       <div>
         {data.weeks.map(week => (

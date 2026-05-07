@@ -22,6 +22,20 @@ export const athleteApi = {
   deletePlan: (athleteId: number, planId: number) =>
     axiosClient.delete(`/athletes/${athleteId}/training-plans/${planId}`),
 
+  // PDF Download
+  downloadFullPdf: async (athleteId: number, planId: number) => {
+    const response = await axiosClient.get(
+      `/athletes/${athleteId}/training-plans/${planId}/export/pdf/full`,
+      { responseType: 'blob' }
+    )
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'training-plan-full.pdf'
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
   // Plan vs Actual
   getPlanVsActual: (athleteId: number, startDate: string, endDate: string) =>
     axiosClient
