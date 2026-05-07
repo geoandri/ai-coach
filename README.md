@@ -66,10 +66,6 @@ node --env-file=.env dist\index.js
 Open **http://localhost:3000** — the app's landing page has everything you need to get started,
 including MCP setup instructions for Claude Desktop and Claude Code.
 
-## Documentation
-
-- [MCP setup](docs/mcp-setup.md)
-
 ## Upgrading
 
 1. Download the new release from the [Releases](../../releases) page and extract it to a new folder
