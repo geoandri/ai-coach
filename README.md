@@ -1,13 +1,17 @@
 # AI Coach
 
-A personalised AI coaching platform where an AI agent acts as a personal coach: it interviews
-athletes, generates periodized training plans, and tracks week-by-week adherence. Strava
-integration is optional — it allows the coach to pull your training history automatically,
-but the app works fully without it.
+A personalised AI coaching platform powered by Claude where an AI agent acts as a personal
+coach: it interviews athletes, generates periodized training plans, and tracks week-by-week
+adherence. It works with Claude Desktop and Claude Code. Strava integration is optional —
+it allows the coach to pull your training history automatically, but the app works fully
+without it.
 
 ## Requirements
 
-Node.js 18 or later. No native dependencies — works on macOS, Linux, and Windows.
+- Node.js 18 or later
+- Claude Desktop or Claude Code
+
+No native dependencies — works on macOS, Linux, and Windows.
 
 ## Download
 
