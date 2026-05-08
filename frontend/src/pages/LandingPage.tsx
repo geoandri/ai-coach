@@ -46,11 +46,8 @@ export default function LandingPage() {
           <p className="text-gray-400 text-sm">
             The MCP server starts automatically alongside the app and is reachable at{' '}
             <code className="text-orange-400 text-xs">http://localhost:3001/mcp</code>.
-            Add the following to{' '}
-            <code className="text-orange-400 text-xs">
-              ~/Library/Application Support/Claude/claude_desktop_config.json
-            </code>
-            :
+            In Claude Desktop, open <span className="text-white font-medium">Settings → Developer → Edit Config</span> to
+            open the config file, then add the following:
           </p>
           <Code>{`{
   "mcpServers": {
