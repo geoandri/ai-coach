@@ -42,14 +42,35 @@ export default function AthleteDashboard() {
       <AdherenceChart weeks={data.weeks} />
 
       <div>
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-bold">All Weeks</h2>
           <button onClick={reload} className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
             Refresh
           </button>
         </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
+          {[
+            { label: 'Base',     dot: 'bg-blue-700' },
+            { label: 'Build',    dot: 'bg-purple-700' },
+            { label: 'Peak',     dot: 'bg-orange-700' },
+            { label: 'Taper',    dot: 'bg-yellow-700' },
+            { label: 'Race',     dot: 'bg-red-700' },
+            { label: 'Recovery', dot: 'bg-green-700' },
+          ].map(({ label, dot }) => (
+            <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
+              <span className={`inline-block w-2.5 h-2.5 rounded-full ${dot}`} />
+              {label}
+            </span>
+          ))}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {data.weeks.map(w => <WeeklyCard key={w.weekNumber} week={w} />)}
+          {data.weeks.map(w => (
+            <WeeklyCard
+              key={w.weekNumber}
+              week={w}
+              planUrl={`/athletes/${athleteId}/plan#week-${w.weekNumber}`}
+            />
+          ))}
         </div>
       </div>
     </div>
