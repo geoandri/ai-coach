@@ -1,0 +1,104 @@
+name: Release (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.2.0 — no leading v)'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Verify caller is repo owner
+        if: github.actor != 'geoandri'
+        run: |
+          echo "❌ Only the repo owner can trigger a release."
+          exit 1
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            mcp/package-lock.json
+            server/package-lock.json
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+
+      - name: Build MCP
+        working-directory: mcp
+        run: npm ci && npm run build
+
+      - name: Build server
+        working-directory: server
+        run: npm ci && npm run build
+
+      - name: Install server production dependencies
+        working-directory: server
+        run: npm ci --omit=dev
+
+      - name: Install MCP production dependencies
+        working-directory: mcp
+        run: npm ci --omit=dev
+
+      # ── Tag ───────────────────────────────────────────────────────────────
+      - name: Create and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      # ── Assemble tarball ──────────────────────────────────────────────────
+      - name: Assemble release directory
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          RELEASE_DIR="ai-coach-standalone"
+
+          mkdir -p "${RELEASE_DIR}/mcp"
+
+          cp -r server/dist          "${RELEASE_DIR}/dist"
+          cp -r server/node_modules  "${RELEASE_DIR}/node_modules"
+          cp    server/package.json  "${RELEASE_DIR}/package.json"
+          cp -r frontend/dist        "${RELEASE_DIR}/public"
+          cp -r mcp/dist             "${RELEASE_DIR}/mcp/dist"
+          cp -r mcp/node_modules     "${RELEASE_DIR}/mcp/node_modules"
+          cp    mcp/package.json     "${RELEASE_DIR}/mcp/package.json"
+
+          mkdir -p "${RELEASE_DIR}/personas"
+          if [ -d docs/personas ]; then
+            cp -r docs/personas/. "${RELEASE_DIR}/personas/"
+          fi
+
+          cp server/.env.example   "${RELEASE_DIR}/.env.example"
+          cp docs/release-README.md "${RELEASE_DIR}/README.md"
+
+          tar -czf "ai-coach-standalone-${TAG}.tar.gz" "${RELEASE_DIR}/"
+
+      # ── GitHub Release ────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          files: ai-coach-standalone-v${{ github.event.inputs.version }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
