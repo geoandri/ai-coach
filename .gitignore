@@ -17,11 +17,17 @@ backend/out/
 # Gradle wrapper jar (keep the scripts)
 !backend/gradle/wrapper/gradle-wrapper.jar
 
-# Frontend build artifacts
+# Build artifacts and dependencies
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/test-results/
+server/node_modules/
+server/dist/
+server/test-results/
+mcp/node_modules/
+mcp/dist/
+mcp/test-results/
 
 # IDE files
 .idea/
