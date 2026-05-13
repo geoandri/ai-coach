@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { WeeklyBlock, DailyWorkout } from '../types/plan'
 
 interface Props {
@@ -36,18 +37,21 @@ function WorkoutRow({ w }: { w: DailyWorkout }) {
 }
 
 export function WeekAccordion({ week, isCurrentWeek = false }: Props) {
-  const [open, setOpen] = useState(isCurrentWeek)
+  const { hash } = useLocation()
+  const isLinked = hash === `#week-${week.weekNumber}`
+  const [open, setOpen] = useState(isCurrentWeek || isLinked)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (isCurrentWeek && ref.current) {
+    if ((isCurrentWeek || isLinked) && ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [isCurrentWeek])
+  }, [isCurrentWeek, isLinked])
 
   return (
     <div
       ref={ref}
+      id={`week-${week.weekNumber}`}
       className={`rounded-xl overflow-hidden mb-2 ${
         isCurrentWeek
           ? 'border-2 border-orange-500'

@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom'
 import { WeekAdherence } from '../types/dashboard'
 
 interface Props {
   week: WeekAdherence
+  planUrl?: string
 }
 
 function phaseColor(phase: string | null | undefined): string {
@@ -19,13 +21,13 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })
 }
 
-export function WeeklyCard({ week }: Props) {
+export function WeeklyCard({ week, planUrl }: Props) {
   const colorClass = phaseColor(week.phase)
   const adherencePct = Math.min(week.adherencePercent, 100)
   const barColor = adherencePct >= 90 ? 'bg-green-500' : adherencePct >= 70 ? 'bg-yellow-500' : 'bg-red-500'
 
-  return (
-    <div className={`rounded-xl border p-4 ${colorClass} ${week.isCurrentWeek ? 'ring-2 ring-orange-500' : ''} ${week.isFutureWeek ? 'opacity-60' : ''}`}>
+  const inner = (
+    <div className={`rounded-xl border p-4 ${colorClass} ${week.isCurrentWeek ? 'ring-2 ring-orange-500' : ''} ${week.isFutureWeek ? 'opacity-60' : ''} ${planUrl ? 'cursor-pointer hover:brightness-125 transition-[filter]' : ''}`}>
       <div className="flex justify-between items-start mb-2">
         <div>
           <span className="text-xs text-gray-400">Week {week.weekNumber}</span>
@@ -51,4 +53,9 @@ export function WeeklyCard({ week }: Props) {
       </div>
     </div>
   )
+
+  if (planUrl) {
+    return <Link to={planUrl}>{inner}</Link>
+  }
+  return inner
 }
