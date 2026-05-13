@@ -14,7 +14,7 @@ export default function AthleteDashboard() {
       <p className="text-red-400 mb-4">{error}</p>
     </div>
   )
-  if (!data) return <div className="text-gray-500 text-center py-20">No training plan yet.</div>
+  if (!data || data.weeks.length === 0) return <div className="text-gray-500 text-center py-20">No training plan yet.</div>
 
   const currentWeek = data.weeks.find(w => w.isCurrentWeek)
 
@@ -34,7 +34,7 @@ export default function AthleteDashboard() {
         <div>
           <h2 className="text-lg font-bold mb-3 text-orange-400">Current Week</h2>
           <div className="max-w-sm">
-            <WeeklyCard week={currentWeek} />
+            <WeeklyCard week={currentWeek} planUrl={athleteId ? `/athletes/${athleteId}/plan#week-${currentWeek.weekNumber}` : undefined} />
           </div>
         </div>
       )}
