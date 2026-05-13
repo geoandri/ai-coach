@@ -50,8 +50,8 @@ export function WeekAccordion({ week, isCurrentWeek = false }: Props) {
 
   return (
     <div
-      ref={ref}
       id={`week-${week.weekNumber}`}
+      ref={ref}
       className={`rounded-xl overflow-hidden mb-2 ${
         isCurrentWeek
           ? 'border-2 border-orange-500'

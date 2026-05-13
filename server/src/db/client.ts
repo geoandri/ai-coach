@@ -18,6 +18,10 @@ export function getDb(): Database {
   return _db
 }
 
+export function setDb(db: Database): void {
+  _db = db
+}
+
 export function saveDb(): void {
   const data = _db.export()
   writeFileSync(dbPath, Buffer.from(data))
