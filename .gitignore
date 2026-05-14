@@ -6,17 +6,6 @@ data/
 .env.local
 .env.*.local
 
-# Backend build artifacts
-backend/build/
-backend/.gradle/
-backend/out/
-*.class
-*.jar
-*.war
-
-# Gradle wrapper jar (keep the scripts)
-!backend/gradle/wrapper/gradle-wrapper.jar
-
 # Build artifacts and dependencies
 frontend/node_modules/
 frontend/dist/

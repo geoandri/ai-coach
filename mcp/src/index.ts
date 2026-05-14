@@ -18,7 +18,7 @@ import { createServer } from 'http'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api'
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:3000/api'
 const publicUrl = process.env.PUBLIC_URL ?? backendUrl
 const client = new AiCoachClient(backendUrl, publicUrl)
 
