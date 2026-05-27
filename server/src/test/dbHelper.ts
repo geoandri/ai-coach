@@ -12,7 +12,7 @@ export async function createTestDb(): Promise<void> {
   db = new SQL.Database()
   db.run('PRAGMA foreign_keys = ON;')
 
-  const sqlPath = new URL('../db/migrations/schema.sql', import.meta.url).pathname
+  const sqlPath = fileURLToPath(new URL('../db/migrations/schema.sql', import.meta.url))
   const sql = readFileSync(sqlPath, 'utf8')
   const statements = sql
     .split(/^--> statement-breakpoint$/m)

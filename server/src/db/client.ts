@@ -40,7 +40,7 @@ export async function initDb(): Promise<void> {
 }
 
 export function runMigrations(): void {
-  const sqlPath = new URL('./migrations/schema.sql', import.meta.url).pathname
+  const sqlPath = fileURLToPath(new URL('./migrations/schema.sql', import.meta.url))
   const sql = readFileSync(sqlPath, 'utf8')
   // Split on drizzle-kit statement-breakpoint comments and semicolons
   const statements = sql
