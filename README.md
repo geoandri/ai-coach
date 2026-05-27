@@ -15,9 +15,13 @@ No native dependencies — works on macOS, Linux, and Windows.
 
 ## Download
 
-Download the latest release from the [Releases](../../releases) page and extract it.
+Download the latest release from the [Releases](../../releases) page and extract it to a folder of your choice.
 
 ## Setup
+
+> **Note:** All commands below must be run from inside the extracted folder.
+> For example, if you extracted to `C:\ai-coach` (Windows) or `~/ai-coach` (macOS/Linux),
+> open a terminal in that folder before running any of the following commands.
 
 ### 1. Create a Strava API application (optional)
 
