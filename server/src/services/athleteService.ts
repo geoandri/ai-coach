@@ -1,4 +1,5 @@
 import { queryRows, queryOne, run, saveDb, lastInsertId } from '../db/client.js'
+import { hasTokenForAthlete } from './intervalsIcuService.js'
 import type {
   AthleteDto,
   CreateAthleteRequest,
@@ -28,7 +29,7 @@ function toDto(row: Record<string, unknown>): AthleteDto {
     raceDate: (row.race_date as string | null) ?? null,
     raceDistanceKm: (row.race_distance_km as number | null) ?? null,
     raceElevationM: (row.race_elevation_m as number | null) ?? null,
-    intervalsIcuEnabled: Boolean(row.intervals_icu_enabled),
+    intervalsIcuEnabled: Boolean(row.intervals_icu_enabled) || hasTokenForAthlete(row.id as number),
     intervalsIcuAthleteId: (row.intervals_icu_athlete_id as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,

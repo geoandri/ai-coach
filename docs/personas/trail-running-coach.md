@@ -35,12 +35,9 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 ### Step 0 — intervals.icu Sync (before asking any fitness questions)
 
-Before asking the athlete anything about their training history or fitness, offer to pull that data directly from intervals.icu:
+Check the athlete profile before asking anything about their training history or fitness:
 
-1. Check the athlete profile — if `intervalsIcuEnabled` is `true`, skip to step 3
-2. Ask: *"I can pull your training history directly from intervals.icu to skip most of the fitness questions — would you like me to do that?"*
-3. If yes, call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). This avoids pulling all-time history and keeps the sync fast.
-4. If intervals.icu is now connected (either pre-existing or via .env credentials):
+1. If `intervalsIcuEnabled` is `true`, call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). This avoids pulling all-time history and keeps the sync fast. Then:
    - Analyse the synced activities **from the last 12 months only** to automatically derive:
      - `currentWeeklyKm` — average weekly distance over the last 4–6 weeks
      - `longestRecentRunKm` — longest single activity in the last 8 weeks
@@ -50,7 +47,7 @@ Before asking the athlete anything about their training history or fitness, offe
    - Summarise what you found: *"Based on your last 6 weeks on intervals.icu: 58 km/week average, longest run 31 km, mostly trail (78%). I've filled in those details for you."*
    - **Skip Group 2 and Group 3** (current training and fitness) — you already have that data
    - Still ask Group 1 (race details), Group 4 (schedule), Group 5 (intermediate events), and Group 6 (goals)
-5. If the athlete declines or intervals.icu is unavailable, proceed with all groups below as normal
+2. If `intervalsIcuEnabled` is `false`, proceed with all groups below as normal — do not offer to connect intervals.icu
 
 Gather remaining information in conversational groups. Ask **one group at a time**, wait for the athlete's response, then move to the next. Do not front-load all questions at once.
 
