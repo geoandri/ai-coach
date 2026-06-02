@@ -10,6 +10,7 @@ export const mockAthlete: Athlete = {
   goalType: 'TARGET_TIME',
   trailAccess: false,
   stravaEnabled: false,
+  intervalsIcuEnabled: false,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
 }

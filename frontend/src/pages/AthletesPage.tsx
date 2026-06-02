@@ -40,6 +40,11 @@ function AthleteCard({ athlete }: { athlete: Athlete }) {
               Strava
             </span>
           )}
+          {athlete.intervalsIcuEnabled && (
+            <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">
+              intervals.icu
+            </span>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm">

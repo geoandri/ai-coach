@@ -53,11 +53,28 @@ export const athleteApi = {
       .then(r => r.data),
   getStravaConnectUrl: (athleteId: number) => `/api/athletes/${athleteId}/auth/strava`,
 
+  // intervals.icu
+  getIntervalsIcuStatus: (athleteId: number) =>
+    axiosClient
+      .get<{ connected: boolean; intervalsAthleteId?: string }>(`/athletes/${athleteId}/auth/intervals-icu/status`)
+      .then(r => r.data),
+  connectIntervalsIcu: (athleteId: number, intervalsAthleteId: string, apiKey: string) =>
+    axiosClient
+      .post<{ connected: boolean; intervalsAthleteId?: string }>(
+        `/athletes/${athleteId}/auth/intervals-icu`,
+        { athleteId: intervalsAthleteId, apiKey }
+      )
+      .then(r => r.data),
+  disconnectIntervalsIcu: (athleteId: number) =>
+    axiosClient.delete(`/athletes/${athleteId}/auth/intervals-icu`),
+
   // Activities
   getActivities: (athleteId: number, page = 0, size = 20) =>
     axiosClient
       .get<PagedResponse<Activity>>(`/athletes/${athleteId}/activities?page=${page}&size=${size}`)
       .then(r => r.data),
-  syncActivities: (athleteId: number) =>
-    axiosClient.get<SyncResult>(`/athletes/${athleteId}/activities/sync`).then(r => r.data),
+  syncActivities: (athleteId: number, provider?: 'strava' | 'intervals_icu') => {
+    const qs = provider ? `?provider=${provider}` : ''
+    return axiosClient.get<SyncResult>(`/athletes/${athleteId}/activities/sync${qs}`).then(r => r.data)
+  },
 }

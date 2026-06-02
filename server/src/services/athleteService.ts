@@ -30,6 +30,8 @@ function toDto(row: Record<string, unknown>): AthleteDto {
     raceElevationM: (row.race_elevation_m as number | null) ?? null,
     stravaEnabled: Boolean(row.strava_enabled),
     stravaAthleteId: (row.strava_athlete_id as number | null) ?? null,
+    intervalsIcuEnabled: Boolean(row.intervals_icu_enabled),
+    intervalsIcuAthleteId: (row.intervals_icu_athlete_id as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   }
@@ -152,6 +154,33 @@ export function linkStravaAthlete(internalAthleteId: number, stravaAthleteId: nu
   run(
     'UPDATE athletes SET strava_athlete_id = ?, strava_enabled = 1, updated_at = ? WHERE id = ?',
     [stravaAthleteId, new Date().toISOString(), internalAthleteId]
+  )
+  saveDb()
+  return true
+}
+
+export function linkIntervalsIcuAthlete(
+  internalAthleteId: number,
+  intervalsAthleteId: string
+): boolean {
+  const existing = getAthlete(internalAthleteId)
+  if (!existing) return false
+
+  run(
+    'UPDATE athletes SET intervals_icu_athlete_id = ?, intervals_icu_enabled = 1, updated_at = ? WHERE id = ?',
+    [intervalsAthleteId, new Date().toISOString(), internalAthleteId]
+  )
+  saveDb()
+  return true
+}
+
+export function unlinkIntervalsIcuAthlete(internalAthleteId: number): boolean {
+  const existing = getAthlete(internalAthleteId)
+  if (!existing) return false
+
+  run(
+    'UPDATE athletes SET intervals_icu_athlete_id = NULL, intervals_icu_enabled = 0, updated_at = ? WHERE id = ?',
+    [new Date().toISOString(), internalAthleteId]
   )
   saveDb()
   return true

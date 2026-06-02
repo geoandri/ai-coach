@@ -27,8 +27,15 @@ export interface AthleteDto {
   raceElevationM: number | null
   stravaEnabled: boolean
   stravaAthleteId: number | null
+  intervalsIcuEnabled: boolean
+  intervalsIcuAthleteId: string | null
   createdAt: string         // ISO-8601
   updatedAt: string         // ISO-8601
+}
+
+export interface ConnectIntervalsIcuRequest {
+  athleteId: string
+  apiKey: string
 }
 
 export interface CreateAthleteRequest {

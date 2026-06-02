@@ -5,6 +5,7 @@ import * as planDiffService from '../services/planDiffService.js'
 import * as pdfExportService from '../services/pdfExportService.js'
 import * as stravaOAuthService from '../services/stravaOAuthService.js'
 import * as stravaActivityService from '../services/stravaActivityService.js'
+import * as intervalsIcuService from '../services/intervalsIcuService.js'
 import * as dashboardService from '../services/dashboardService.js'
 import type {
   CreateAthleteRequest,
@@ -12,6 +13,7 @@ import type {
   AddCoachNoteRequest,
   CreateTrainingPlanRequest,
   UpdateWeekRequest,
+  ConnectIntervalsIcuRequest,
 } from '../types/index.js'
 
 export async function athleteRoutes(app: FastifyInstance) {
@@ -180,26 +182,98 @@ export async function athleteRoutes(app: FastifyInstance) {
 
   app.get<{
     Params: { id: string }
-    Querystring: { afterDate?: string }
+    Querystring: { afterDate?: string; provider?: string }
   }>('/api/athletes/:id/activities/sync', async (request) => {
-    return stravaActivityService.syncActivitiesForAthlete(
-      Number(request.params.id),
-      request.query.afterDate
-    )
+    const internalAthleteId = Number(request.params.id)
+    const { afterDate, provider } = request.query
+
+    const stravaConnected = stravaOAuthService.hasTokenForAthlete(internalAthleteId)
+    const intervalsConnected = intervalsIcuService.hasTokenForAthlete(internalAthleteId)
+
+    if (provider === 'intervals_icu') {
+      return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    }
+    if (provider === 'strava') {
+      return stravaActivityService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    }
+    if (stravaConnected && intervalsConnected) {
+      return {
+        syncedCount: 0,
+        message: 'Multiple providers active. Specify ?provider=strava or ?provider=intervals_icu',
+      }
+    }
+    if (intervalsConnected) {
+      return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    }
+    return stravaActivityService.syncActivitiesForAthlete(internalAthleteId, afterDate)
   })
 
   app.get<{
     Params: { id: string }
     Querystring: { page?: string; size?: string }
   }>('/api/athletes/:id/activities', async (request) => {
+    const internalAthleteId = Number(request.params.id)
     const page = Number(request.query.page ?? 0)
     const size = Number(request.query.size ?? 20)
-    return stravaActivityService.getActivitiesForAthlete(
-      Number(request.params.id),
-      page,
-      size
+
+    const stravaPage = stravaActivityService.getActivitiesForAthlete(internalAthleteId, 0, 10000)
+    const intervalsPage = intervalsIcuService.getActivitiesForAthlete(internalAthleteId, 0, 10000)
+
+    const combined = [...stravaPage.content, ...intervalsPage.content].sort(
+      (a, b) => b.activityDate.localeCompare(a.activityDate)
     )
+    const totalElements = combined.length
+    const totalPages = Math.ceil(totalElements / size)
+    const content = combined.slice(page * size, page * size + size)
+    return { content, totalElements, totalPages, number: page, size }
   })
+
+  // ── intervals.icu ─────────────────────────────────────────────────────────
+  app.post<{ Params: { id: string }; Body: ConnectIntervalsIcuRequest }>(
+    '/api/athletes/:id/auth/intervals-icu',
+    async (request, reply) => {
+      const internalAthleteId = Number(request.params.id)
+      const { athleteId, apiKey } = request.body
+      if (!athleteId || !apiKey) {
+        return reply.code(400).send({ error: 'athleteId and apiKey are required' })
+      }
+      let valid: boolean
+      try {
+        valid = await intervalsIcuService.validateCredentials(athleteId, apiKey)
+      } catch {
+        return reply.code(502).send({ error: 'Failed to reach intervals.icu API' })
+      }
+      if (!valid) {
+        return reply.code(401).send({ error: 'Invalid intervals.icu credentials' })
+      }
+      intervalsIcuService.upsertToken(athleteId, apiKey, internalAthleteId)
+      athleteService.linkIntervalsIcuAthlete(internalAthleteId, athleteId)
+      return { connected: true, intervalsAthleteId: athleteId }
+    }
+  )
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/athletes/:id/auth/intervals-icu',
+    async (request, reply) => {
+      const internalAthleteId = Number(request.params.id)
+      intervalsIcuService.removeToken(internalAthleteId)
+      athleteService.unlinkIntervalsIcuAthlete(internalAthleteId)
+      return reply.code(204).send()
+    }
+  )
+
+  app.get<{ Params: { id: string } }>(
+    '/api/athletes/:id/auth/intervals-icu/status',
+    async (request) => {
+      const internalAthleteId = Number(request.params.id)
+      const connected = intervalsIcuService.hasTokenForAthlete(internalAthleteId)
+      if (connected) {
+        const token = intervalsIcuService.getTokenForAthlete(internalAthleteId)
+        return { connected: true, intervalsAthleteId: token?.athlete_id ?? null }
+      }
+      return { connected: false }
+    }
+  )
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
   app.get<{ Params: { id: string } }>(

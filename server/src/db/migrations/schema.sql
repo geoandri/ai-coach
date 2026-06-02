@@ -106,3 +106,44 @@ CREATE TABLE `weekly_blocks` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_weekly_blocks_plan_week` ON `weekly_blocks` (`training_plan_id`,`week_number`);
+--> statement-breakpoint
+ALTER TABLE `athletes` ADD COLUMN `intervals_icu_enabled` integer DEFAULT false NOT NULL;
+--> statement-breakpoint
+ALTER TABLE `athletes` ADD COLUMN `intervals_icu_athlete_id` text;
+--> statement-breakpoint
+CREATE TABLE `intervals_icu_tokens` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`athlete_id` text NOT NULL,
+	`internal_athlete_id` integer,
+	`api_key` text NOT NULL,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`internal_athlete_id`) REFERENCES `athletes`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `intervals_icu_tokens_athlete_id_unique` ON `intervals_icu_tokens` (`athlete_id`);
+--> statement-breakpoint
+CREATE TABLE `intervals_icu_activities` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`intervals_id` integer NOT NULL,
+	`athlete_id` text NOT NULL,
+	`internal_athlete_id` integer,
+	`name` text,
+	`sport_type` text,
+	`activity_date` text NOT NULL,
+	`start_datetime` text,
+	`distance_m` real,
+	`moving_time_s` integer,
+	`elapsed_time_s` integer,
+	`total_elevation_m` real,
+	`average_speed` real,
+	`max_speed` real,
+	`average_heartrate` real,
+	`max_heartrate` real,
+	`trainer` integer DEFAULT false,
+	`manual` integer DEFAULT false,
+	`synced_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`internal_athlete_id`) REFERENCES `athletes`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `intervals_icu_activities_intervals_id_unique` ON `intervals_icu_activities` (`intervals_id`);
