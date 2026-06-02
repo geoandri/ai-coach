@@ -42,8 +42,9 @@ Example:
 ### Step 0 — Activity Data Import (before asking fitness questions)
 
 > TODO: If intervals.icu applies, use this pattern:
-> - If `intervalsIcuEnabled` is `true`, call `sync_activities` and derive fitness fields from the data; skip Groups 2 and 3
-> - If `intervalsIcuEnabled` is `false`, proceed with all groups — do not offer to connect intervals.icu
+> Read `intervalsIcuEnabled` from the athlete object already returned by `create_athlete` or `get_athlete`. **Do not ask the athlete about intervals.icu credentials.**
+> - If `intervalsIcuEnabled` is `true`: silently call `sync_activities` and derive fitness fields from the data; skip Groups 2 and 3
+> - If `intervalsIcuEnabled` is `false`: proceed with all groups — do not mention intervals.icu, do not offer to connect it
 > If no import is relevant, remove this step.
 
 ### Group 1 — [Primary Event / Goal Details]
