@@ -22,8 +22,6 @@ export interface Athlete {
   raceDate?: string
   raceDistanceKm?: number
   raceElevationM?: number
-  stravaEnabled?: boolean
-  stravaAthleteId?: number
   intervalsIcuEnabled?: boolean
   intervalsIcuAthleteId?: string
   createdAt?: string
@@ -275,21 +273,14 @@ export class AiCoachClient {
     return data
   }
 
-  // Strava
-  async syncActivities(athleteId: number, afterDate?: string, provider?: 'strava' | 'intervals_icu'): Promise<SyncResultDto> {
+  // Activities
+  async syncActivities(athleteId: number, afterDate?: string): Promise<SyncResultDto> {
     const params = new URLSearchParams()
     if (afterDate) params.set('afterDate', afterDate)
-    if (provider) params.set('provider', provider)
     const qs = params.toString() ? `?${params.toString()}` : ''
     const { data } = await this.http.get<SyncResultDto>(`/athletes/${athleteId}/activities/sync${qs}`)
     return data
   }
-
-  getStravaConnectUrl(athleteId: number): string {
-    return `${this.publicBaseUrl}/athletes/${athleteId}/auth/strava`
-  }
-
-  // intervals.icu
   async connectIntervalsIcu(
     athleteId: number,
     intervalsAthleteId: string,

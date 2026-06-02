@@ -74,15 +74,14 @@ describe('add_coach_note', () => {
   })
 })
 
-describe('get_strava_connect_url', () => {
-  it('calls client.getStravaConnectUrl(5) and returns url and instruction', async () => {
-    vi.mocked(client.getStravaConnectUrl).mockReturnValue('https://strava.com/oauth?id=5')
+describe('connect_intervals_icu', () => {
+  it('calls client.connectIntervalsIcu with parsed fields', async () => {
+    const mockResult = { connected: true, intervalsAthleteId: 'i12345' }
+    vi.mocked(client.connectIntervalsIcu).mockResolvedValue(mockResult as never)
 
-    const result = await handleAthleteTool('get_strava_connect_url', { athleteId: 5 }, client)
-    expect(client.getStravaConnectUrl).toHaveBeenCalledWith(5)
-    const parsed = JSON.parse(result.content[0].text)
-    expect(parsed.url).toBe('https://strava.com/oauth?id=5')
-    expect(parsed.instruction).toBeTruthy()
+    const result = await handleAthleteTool('connect_intervals_icu', { athleteId: 5, intervalsAthleteId: 'i12345', apiKey: 'secret' }, client)
+    expect(client.connectIntervalsIcu).toHaveBeenCalledWith(5, 'i12345', 'secret')
+    expect(JSON.parse(result.content[0].text)).toEqual(mockResult)
   })
 })
 

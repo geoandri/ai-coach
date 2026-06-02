@@ -35,11 +35,6 @@ function AthleteCard({ athlete }: { athlete: Athlete }) {
           {athlete.email && <p className="text-gray-500 text-xs">{athlete.email}</p>}
         </div>
         <div className="flex items-center gap-1">
-          {athlete.stravaEnabled && (
-            <span className="text-xs bg-orange-900 text-orange-300 px-2 py-0.5 rounded-full">
-              Strava
-            </span>
-          )}
           {athlete.intervalsIcuEnabled && (
             <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">
               intervals.icu

@@ -23,8 +23,6 @@ export interface Athlete {
   raceDate?: string
   raceDistanceKm?: number
   raceElevationM?: number
-  stravaEnabled: boolean
-  stravaAthleteId?: number
   intervalsIcuEnabled: boolean
   intervalsIcuAthleteId?: string
   createdAt: string

@@ -104,17 +104,6 @@ export const athleteTools = [
     }
   },
   {
-    name: 'get_strava_connect_url',
-    description: 'Get the Strava OAuth URL for an athlete. Present this URL to the athlete so they can open it in a browser, authorise Strava access, and return. Once they confirm, call sync_activities to pull their data.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        athleteId: { type: 'number', description: 'The internal athlete ID' }
-      },
-      required: ['athleteId']
-    }
-  },
-  {
     name: 'connect_intervals_icu',
     description: [
       'Connect an athlete\'s intervals.icu account by providing their Athlete ID and API key.',
@@ -147,7 +136,6 @@ export const athleteTools = [
 ]
 
 const GetAthleteSchema = z.object({ athleteId: z.number() })
-const GetStravaConnectUrlSchema = z.object({ athleteId: z.number() })
 const ConnectIntervalsIcuSchema = z.object({
   athleteId: z.number(),
   intervalsAthleteId: z.string(),
@@ -209,11 +197,6 @@ export async function handleAthleteTool(
       const { athleteId, note } = AddCoachNoteSchema.parse(args)
       const athlete = await client.addCoachNote(athleteId, note)
       return { content: text(athlete) }
-    }
-    case 'get_strava_connect_url': {
-      const { athleteId } = GetStravaConnectUrlSchema.parse(args)
-      const url = client.getStravaConnectUrl(athleteId)
-      return { content: text({ url, instruction: 'Ask the athlete to open this URL in a browser, approve Strava access, and return to the conversation. Then call sync_activities to pull their data.' }) }
     }
     case 'connect_intervals_icu': {
       const { athleteId, intervalsAthleteId, apiKey } = ConnectIntervalsIcuSchema.parse(args)

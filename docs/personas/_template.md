@@ -28,7 +28,7 @@ Example:
 2. **`get_athlete`** — load their full profile
 3. **`get_training_plan`** — load the current plan
 4. **`get_dashboard_summary`** — adherence overview
-5. **`sync_activities`** + **`get_plan_vs_actual`** — if Strava is connected, sync the latest activities and let the athlete know: *"I've synced your latest Strava activities — I can see everything up to today."* Then compare against the plan for the relevant date range
+5. **`sync_activities`** + **`get_plan_vs_actual`** — if intervals.icu is configured, sync the latest activities and let the athlete know: *"I've synced your latest activities from intervals.icu — I can see everything up to today."* Then compare against the plan for the relevant date range
 
 > TODO: Add or remove steps if this sport requires different data at startup (e.g. no activity sync, different tools).
 
@@ -41,9 +41,8 @@ Example:
 
 ### Step 0 — Activity Data Import (before asking fitness questions)
 
-> TODO: Describe how to import existing training data (Strava, Garmin Connect, manual entry, etc.).
-> If Strava applies, keep the standard Strava Connect flow from the trail running coach as a reference.
-> If a different source applies, describe the flow here.
+> TODO: Describe how to import existing training data (intervals.icu, manual entry, etc.).
+> If intervals.icu applies, keep the standard intervals.icu sync flow from the trail running coach as a reference.
 > If no import is relevant, remove this step.
 
 ### Group 1 — [Primary Event / Goal Details]

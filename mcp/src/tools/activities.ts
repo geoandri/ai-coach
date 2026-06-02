@@ -5,7 +5,7 @@ export const activityTools = [
   {
     name: 'get_plan_vs_actual',
     description: [
-      'Compare planned workouts against actual Strava activities for an athlete over a date range.',
+      'Compare planned workouts against actual activities for an athlete over a date range.',
       'Returns day-by-day breakdown of planned vs actual km, elevation, and workout match.',
       'Use this to review adherence and adjust the training plan.'
     ].join(' '),
@@ -33,22 +33,16 @@ export const activityTools = [
   {
     name: 'sync_activities',
     description: [
-      'Trigger an activity sync for an athlete. Pulls new runs from their connected activity provider (Strava or intervals.icu).',
+      'Trigger an activity sync for an athlete. Pulls new runs from their connected intervals.icu account.',
       'Use afterDate (YYYY-MM-DD) to limit the sync to activities after a specific date.',
       'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.',
-      'If the athlete has both Strava and intervals.icu connected, you MUST specify the provider parameter.',
-      'If only one provider is connected, provider is optional and will be auto-detected.'
+      'Always ask the athlete for permission before syncing.'
     ].join(' '),
     inputSchema: {
       type: 'object' as const,
       properties: {
         athleteId: { type: 'number', description: 'The internal athlete ID' },
-        afterDate: { type: 'string', description: 'Only sync activities after this date (YYYY-MM-DD). Omit to sync all new activities.' },
-        provider: {
-          type: 'string',
-          enum: ['strava', 'intervals_icu'],
-          description: 'Which provider to sync from. Required if the athlete has both Strava and intervals.icu connected.'
-        }
+        afterDate: { type: 'string', description: 'Only sync activities after this date (YYYY-MM-DD). Omit to sync all new activities.' }
       },
       required: ['athleteId']
     }
@@ -65,8 +59,7 @@ const DashboardSchema = z.object({ athleteId: z.number() })
 
 const SyncSchema = z.object({
   athleteId: z.number(),
-  afterDate: z.string().optional(),
-  provider: z.enum(['strava', 'intervals_icu']).optional()
+  afterDate: z.string().optional()
 })
 
 export async function handleActivityTool(
@@ -88,8 +81,8 @@ export async function handleActivityTool(
       return { content: text(summary) }
     }
     case 'sync_activities': {
-      const { athleteId, afterDate, provider } = SyncSchema.parse(args)
-      const result = await client.syncActivities(athleteId, afterDate, provider)
+      const { athleteId, afterDate } = SyncSchema.parse(args)
+      const result = await client.syncActivities(athleteId, afterDate)
       return { content: text(result) }
     }
     default:

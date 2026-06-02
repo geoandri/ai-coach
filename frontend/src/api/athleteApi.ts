@@ -46,13 +46,6 @@ export const athleteApi = {
   getDashboard: (athleteId: number) =>
     axiosClient.get<DashboardSummary>(`/athletes/${athleteId}/dashboard/summary`).then(r => r.data),
 
-  // Strava
-  getStravaStatus: (athleteId: number) =>
-    axiosClient
-      .get<{ connected: boolean; stravaAthleteId?: number }>(`/athletes/${athleteId}/auth/strava/status`)
-      .then(r => r.data),
-  getStravaConnectUrl: (athleteId: number) => `/api/athletes/${athleteId}/auth/strava`,
-
   // intervals.icu
   getIntervalsIcuStatus: (athleteId: number) =>
     axiosClient
@@ -73,8 +66,6 @@ export const athleteApi = {
     axiosClient
       .get<PagedResponse<Activity>>(`/athletes/${athleteId}/activities?page=${page}&size=${size}`)
       .then(r => r.data),
-  syncActivities: (athleteId: number, provider?: 'strava' | 'intervals_icu') => {
-    const qs = provider ? `?provider=${provider}` : ''
-    return axiosClient.get<SyncResult>(`/athletes/${athleteId}/activities/sync${qs}`).then(r => r.data)
-  },
+  syncActivities: (athleteId: number) =>
+    axiosClient.get<SyncResult>(`/athletes/${athleteId}/activities/sync`).then(r => r.data),
 }

@@ -21,7 +21,7 @@ function formatDuration(s: number | null): string {
 
 export function ActivityList({ activities }: Props) {
   if (activities.length === 0) {
-    return <p className="text-gray-500 text-sm py-8 text-center">No activities found. Sync from Strava to get started.</p>
+    return <p className="text-gray-500 text-sm py-8 text-center">No activities found. Sync from intervals.icu to get started.</p>
   }
 
   return (

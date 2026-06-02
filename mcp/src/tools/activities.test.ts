@@ -40,25 +40,18 @@ describe('get_dashboard_summary', () => {
 })
 
 describe('sync_activities', () => {
-  it('calls with undefined afterDate and provider when absent', async () => {
+  it('calls with undefined afterDate when absent', async () => {
     vi.mocked(client.syncActivities).mockResolvedValue({ syncedCount: 0, message: 'Synced' } as never)
 
     await handleActivityTool('sync_activities', { athleteId: 1 }, client)
-    expect(client.syncActivities).toHaveBeenCalledWith(1, undefined, undefined)
+    expect(client.syncActivities).toHaveBeenCalledWith(1, undefined)
   })
 
   it('calls with date string when afterDate provided', async () => {
     vi.mocked(client.syncActivities).mockResolvedValue({ syncedCount: 5, message: 'Synced' } as never)
 
     await handleActivityTool('sync_activities', { athleteId: 1, afterDate: '2025-01-01' }, client)
-    expect(client.syncActivities).toHaveBeenCalledWith(1, '2025-01-01', undefined)
-  })
-
-  it('calls with provider when specified', async () => {
-    vi.mocked(client.syncActivities).mockResolvedValue({ syncedCount: 3, message: 'Synced' } as never)
-
-    await handleActivityTool('sync_activities', { athleteId: 1, provider: 'intervals_icu' }, client)
-    expect(client.syncActivities).toHaveBeenCalledWith(1, undefined, 'intervals_icu')
+    expect(client.syncActivities).toHaveBeenCalledWith(1, '2025-01-01')
   })
 })
 

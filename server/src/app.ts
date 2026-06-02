@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 
 import { athleteRoutes } from './routes/athletes.js'
-import { authRoutes } from './routes/auth.js'
 import { legacyRoutes } from './routes/legacy.js'
 import { healthRoutes } from './routes/health.js'
 
@@ -30,7 +29,6 @@ export async function buildApp() {
   // API routes
   await app.register(healthRoutes)
   await app.register(athleteRoutes)
-  await app.register(authRoutes)
   await app.register(legacyRoutes)
 
   // SPA fallback: non-API GET → index.html
