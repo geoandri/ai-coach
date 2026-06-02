@@ -33,15 +33,22 @@ export const activityTools = [
   {
     name: 'sync_activities',
     description: [
-      'Trigger a Strava activity sync for an athlete. Pulls new runs from their connected Strava account.',
+      'Trigger an activity sync for an athlete. Pulls new runs from their connected activity provider (Strava or intervals.icu).',
       'Use afterDate (YYYY-MM-DD) to limit the sync to activities after a specific date.',
-      'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.'
+      'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.',
+      'If the athlete has both Strava and intervals.icu connected, you MUST specify the provider parameter.',
+      'If only one provider is connected, provider is optional and will be auto-detected.'
     ].join(' '),
     inputSchema: {
       type: 'object' as const,
       properties: {
         athleteId: { type: 'number', description: 'The internal athlete ID' },
-        afterDate: { type: 'string', description: 'Only sync activities after this date (YYYY-MM-DD). Omit to sync all new activities.' }
+        afterDate: { type: 'string', description: 'Only sync activities after this date (YYYY-MM-DD). Omit to sync all new activities.' },
+        provider: {
+          type: 'string',
+          enum: ['strava', 'intervals_icu'],
+          description: 'Which provider to sync from. Required if the athlete has both Strava and intervals.icu connected.'
+        }
       },
       required: ['athleteId']
     }
@@ -58,7 +65,8 @@ const DashboardSchema = z.object({ athleteId: z.number() })
 
 const SyncSchema = z.object({
   athleteId: z.number(),
-  afterDate: z.string().optional()
+  afterDate: z.string().optional(),
+  provider: z.enum(['strava', 'intervals_icu']).optional()
 })
 
 export async function handleActivityTool(
@@ -80,8 +88,8 @@ export async function handleActivityTool(
       return { content: text(summary) }
     }
     case 'sync_activities': {
-      const { athleteId, afterDate } = SyncSchema.parse(args)
-      const result = await client.syncActivities(athleteId, afterDate)
+      const { athleteId, afterDate, provider } = SyncSchema.parse(args)
+      const result = await client.syncActivities(athleteId, afterDate, provider)
       return { content: text(result) }
     }
     default:

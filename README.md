@@ -2,9 +2,9 @@
 
 A personalised AI coaching platform powered by Claude where an AI agent acts as a personal
 coach: it interviews athletes, generates periodized training plans, and tracks week-by-week
-adherence. It works with Claude Desktop and Claude Code. Strava integration is optional —
-it allows the coach to pull your training history automatically, but the app works fully
-without it.
+adherence. It works with Claude Desktop and Claude Code. Strava and intervals.icu integrations
+are optional — they allow the coach to pull your training history automatically, but the app
+works fully without them.
 
 ## Requirements
 
@@ -33,6 +33,20 @@ To enable Strava:
 1. Go to https://www.strava.com/settings/api and create an application
 2. Set **Authorization Callback Domain** to `localhost`
 3. Note your **Client ID** and **Client Secret**
+
+### 1b. Connect intervals.icu (optional)
+
+intervals.icu integration is an alternative to Strava. No server-side configuration is
+required — credentials are entered per-athlete directly in the app's Settings page and
+stored in the local database.
+
+To enable intervals.icu for an athlete:
+1. Go to https://intervals.icu/settings
+2. Under **API Access**, note your **Athlete ID** (starts with `i`, e.g. `i12345`) and **API Key**
+3. Open the athlete's **Settings** tab in the app and enter these under **intervals.icu Connection**
+
+> If an athlete has both Strava and intervals.icu connected, the app will ask you to choose
+> which provider to sync from.
 
 ### 2. Configure environment variables
 

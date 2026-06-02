@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAthlete } from '../hooks/useAthletes'
 import { athleteApi } from '../api/athleteApi'
@@ -9,6 +9,11 @@ export default function AthleteSettings() {
   const { data: athlete } = useAthlete(id)
   const [searchParams] = useSearchParams()
   const [stravaStatus, setStravaStatus] = useState<{ connected: boolean; stravaAthleteId?: number } | null>(null)
+  const [intervalsStatus, setIntervalsStatus] = useState<{ connected: boolean; intervalsAthleteId?: string } | null>(null)
+  const [intervalsForm, setIntervalsForm] = useState({ athleteId: '', apiKey: '' })
+  const [intervalsConnecting, setIntervalsConnecting] = useState(false)
+  const [intervalsError, setIntervalsError] = useState<string | null>(null)
+  const [intervalsDisconnecting, setIntervalsDisconnecting] = useState(false)
 
   const connected = searchParams.get('connected')
   const error = searchParams.get('error')
@@ -20,9 +25,41 @@ export default function AthleteSettings() {
       .catch(() => setStravaStatus({ connected: false }))
   }, [id, connected])
 
+  useEffect(() => {
+    if (!id) return
+    athleteApi.getIntervalsIcuStatus(id)
+      .then(setIntervalsStatus)
+      .catch(() => setIntervalsStatus({ connected: false }))
+  }, [id])
+
   if (!athlete) return <div className="text-gray-400 text-center py-20">Loading...</div>
 
   const stravaConnectUrl = athleteApi.getStravaConnectUrl(id!)
+
+  const handleIntervalsConnect = async (e: FormEvent) => {
+    e.preventDefault()
+    setIntervalsConnecting(true)
+    setIntervalsError(null)
+    try {
+      const result = await athleteApi.connectIntervalsIcu(id!, intervalsForm.athleteId, intervalsForm.apiKey)
+      setIntervalsStatus(result)
+      setIntervalsForm({ athleteId: '', apiKey: '' })
+    } catch {
+      setIntervalsError('Failed to connect. Check your Athlete ID and API key.')
+    } finally {
+      setIntervalsConnecting(false)
+    }
+  }
+
+  const handleIntervalsDisconnect = async () => {
+    setIntervalsDisconnecting(true)
+    try {
+      await athleteApi.disconnectIntervalsIcu(id!)
+      setIntervalsStatus({ connected: false })
+    } finally {
+      setIntervalsDisconnecting(false)
+    }
+  }
 
   return (
     <div>
@@ -91,7 +128,7 @@ export default function AthleteSettings() {
       )}
 
       {/* Strava Connection */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-4">
         <h2 className="text-lg font-semibold mb-4">Strava Connection</h2>
         {stravaStatus?.connected ? (
           <div>
@@ -127,6 +164,81 @@ export default function AthleteSettings() {
             >
               Connect Strava
             </a>
+          </div>
+        )}
+      </div>
+
+      {/* intervals.icu Connection */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <h2 className="text-lg font-semibold mb-4">intervals.icu Connection</h2>
+        {intervalsError && (
+          <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4 text-sm">
+            {intervalsError}
+          </div>
+        )}
+        {intervalsStatus?.connected ? (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span className="text-green-400 text-sm">Connected</span>
+              {intervalsStatus.intervalsAthleteId && (
+                <span className="text-gray-500 text-xs">(ID: {intervalsStatus.intervalsAthleteId})</span>
+              )}
+            </div>
+            <p className="text-gray-400 text-sm mb-4">
+              intervals.icu is connected. Go to Activities to sync your runs.
+            </p>
+            <button
+              onClick={handleIntervalsDisconnect}
+              disabled={intervalsDisconnecting}
+              className="px-4 py-2 border border-red-700 text-red-400 hover:bg-red-900 disabled:opacity-50 text-sm rounded-lg transition-colors"
+            >
+              {intervalsDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-gray-500 rounded-full" />
+              <span className="text-gray-400 text-sm">Not connected</span>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">
+              Connect your intervals.icu account to sync running activities. Find your Athlete ID and API key at{' '}
+              <a
+                href="https://intervals.icu/settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                intervals.icu/settings
+              </a>{' '}
+              under <span className="text-gray-300">API Access</span>.
+            </p>
+            <form onSubmit={handleIntervalsConnect} className="flex flex-col gap-3 max-w-sm">
+              <input
+                type="text"
+                placeholder="Athlete ID (e.g. i12345)"
+                value={intervalsForm.athleteId}
+                onChange={e => setIntervalsForm(f => ({ ...f, athleteId: e.target.value }))}
+                required
+                className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              />
+              <input
+                type="password"
+                placeholder="API key"
+                value={intervalsForm.apiKey}
+                onChange={e => setIntervalsForm(f => ({ ...f, apiKey: e.target.value }))}
+                required
+                className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={intervalsConnecting}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors text-sm"
+              >
+                {intervalsConnecting ? 'Connecting...' : 'Connect intervals.icu'}
+              </button>
+            </form>
           </div>
         )}
       </div>

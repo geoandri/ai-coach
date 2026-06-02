@@ -24,6 +24,8 @@ export interface Athlete {
   raceElevationM?: number
   stravaEnabled?: boolean
   stravaAthleteId?: number
+  intervalsIcuEnabled?: boolean
+  intervalsIcuAthleteId?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -274,13 +276,40 @@ export class AiCoachClient {
   }
 
   // Strava
-  async syncActivities(athleteId: number, afterDate?: string): Promise<SyncResultDto> {
-    const params = afterDate ? `?afterDate=${afterDate}` : ''
-    const { data } = await this.http.get<SyncResultDto>(`/athletes/${athleteId}/activities/sync${params}`)
+  async syncActivities(athleteId: number, afterDate?: string, provider?: 'strava' | 'intervals_icu'): Promise<SyncResultDto> {
+    const params = new URLSearchParams()
+    if (afterDate) params.set('afterDate', afterDate)
+    if (provider) params.set('provider', provider)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+    const { data } = await this.http.get<SyncResultDto>(`/athletes/${athleteId}/activities/sync${qs}`)
     return data
   }
 
   getStravaConnectUrl(athleteId: number): string {
     return `${this.publicBaseUrl}/athletes/${athleteId}/auth/strava`
+  }
+
+  // intervals.icu
+  async connectIntervalsIcu(
+    athleteId: number,
+    intervalsAthleteId: string,
+    apiKey: string
+  ): Promise<{ connected: boolean; intervalsAthleteId?: string }> {
+    const { data } = await this.http.post<{ connected: boolean; intervalsAthleteId?: string }>(
+      `/athletes/${athleteId}/auth/intervals-icu`,
+      { athleteId: intervalsAthleteId, apiKey }
+    )
+    return data
+  }
+
+  async disconnectIntervalsIcu(athleteId: number): Promise<void> {
+    await this.http.delete(`/athletes/${athleteId}/auth/intervals-icu`)
+  }
+
+  async getIntervalsIcuStatus(athleteId: number): Promise<{ connected: boolean; intervalsAthleteId?: string }> {
+    const { data } = await this.http.get<{ connected: boolean; intervalsAthleteId?: string }>(
+      `/athletes/${athleteId}/auth/intervals-icu/status`
+    )
+    return data
   }
 }

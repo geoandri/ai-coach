@@ -18,5 +18,8 @@ export function createMockClient(): AiCoachClient {
     getDashboardSummary: vi.fn(),
     syncActivities: vi.fn(),
     getStravaConnectUrl: vi.fn(),
+    connectIntervalsIcu: vi.fn(),
+    disconnectIntervalsIcu: vi.fn(),
+    getIntervalsIcuStatus: vi.fn(),
   } as unknown as AiCoachClient
 }

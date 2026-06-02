@@ -25,6 +25,8 @@ export interface Athlete {
   raceElevationM?: number
   stravaEnabled: boolean
   stravaAthleteId?: number
+  intervalsIcuEnabled: boolean
+  intervalsIcuAthleteId?: string
   createdAt: string
   updatedAt: string
 }

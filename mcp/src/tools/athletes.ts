@@ -113,11 +113,46 @@ export const athleteTools = [
       },
       required: ['athleteId']
     }
+  },
+  {
+    name: 'connect_intervals_icu',
+    description: [
+      'Connect an athlete\'s intervals.icu account by providing their Athlete ID and API key.',
+      'The Athlete ID starts with "i" (e.g. "i12345") and can be found at https://intervals.icu/settings.',
+      'The API key is listed under "API Access" on that same settings page.',
+      'Credentials are validated against the intervals.icu API before saving.',
+      'Once connected, call sync_activities with provider="intervals_icu" to pull training data.'
+    ].join(' '),
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        athleteId: { type: 'number', description: 'The internal athlete ID' },
+        intervalsAthleteId: { type: 'string', description: 'The intervals.icu athlete ID (e.g. "i12345"), found at https://intervals.icu/settings' },
+        apiKey: { type: 'string', description: 'The intervals.icu API key, found under "API Access" at https://intervals.icu/settings' }
+      },
+      required: ['athleteId', 'intervalsAthleteId', 'apiKey']
+    }
+  },
+  {
+    name: 'disconnect_intervals_icu',
+    description: 'Disconnect an athlete\'s intervals.icu integration. This removes the stored API key.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        athleteId: { type: 'number', description: 'The internal athlete ID' }
+      },
+      required: ['athleteId']
+    }
   }
 ]
 
 const GetAthleteSchema = z.object({ athleteId: z.number() })
 const GetStravaConnectUrlSchema = z.object({ athleteId: z.number() })
+const ConnectIntervalsIcuSchema = z.object({
+  athleteId: z.number(),
+  intervalsAthleteId: z.string(),
+  apiKey: z.string()
+})
 const CreateAthleteSchema = z.object({
   name: z.string(),
   email: z.string().optional(),
@@ -179,6 +214,16 @@ export async function handleAthleteTool(
       const { athleteId } = GetStravaConnectUrlSchema.parse(args)
       const url = client.getStravaConnectUrl(athleteId)
       return { content: text({ url, instruction: 'Ask the athlete to open this URL in a browser, approve Strava access, and return to the conversation. Then call sync_activities to pull their data.' }) }
+    }
+    case 'connect_intervals_icu': {
+      const { athleteId, intervalsAthleteId, apiKey } = ConnectIntervalsIcuSchema.parse(args)
+      const result = await client.connectIntervalsIcu(athleteId, intervalsAthleteId, apiKey)
+      return { content: text(result) }
+    }
+    case 'disconnect_intervals_icu': {
+      const { athleteId } = GetAthleteSchema.parse(args)
+      await client.disconnectIntervalsIcu(athleteId)
+      return { content: text({ success: true }) }
     }
     default:
       throw new Error(`Unknown athlete tool: ${name}`)
