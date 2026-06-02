@@ -1,17 +1,6 @@
 import { queryRows, queryOne } from '../db/client.js'
-import { getActivitiesByDateRange as getStravaActivities } from './stravaActivityService.js'
-import { getActivitiesByDateRange as getIntervalsActivities } from './intervalsIcuService.js'
+import { getActivitiesByDateRange } from './intervalsIcuService.js'
 import type { DashboardSummaryDto, WeekAdherenceDto } from '../types/index.js'
-
-function getActivitiesByDateRange(
-  athleteId: number,
-  startDate: string,
-  endDate: string
-): Record<string, unknown>[] {
-  const strava = getStravaActivities(athleteId, startDate, endDate)
-  const intervals = getIntervalsActivities(athleteId, startDate, endDate)
-  return [...strava, ...intervals]
-}
 
 function buildDashboard(planId: number, athleteId: number): DashboardSummaryDto {
   const weeks = queryRows(

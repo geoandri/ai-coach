@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useAthlete } from '../hooks/useAthletes'
 import { athleteApi } from '../api/athleteApi'
 
@@ -7,23 +7,11 @@ export default function AthleteSettings() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
   const { data: athlete } = useAthlete(id)
-  const [searchParams] = useSearchParams()
-  const [stravaStatus, setStravaStatus] = useState<{ connected: boolean; stravaAthleteId?: number } | null>(null)
   const [intervalsStatus, setIntervalsStatus] = useState<{ connected: boolean; intervalsAthleteId?: string } | null>(null)
   const [intervalsForm, setIntervalsForm] = useState({ athleteId: '', apiKey: '' })
   const [intervalsConnecting, setIntervalsConnecting] = useState(false)
   const [intervalsError, setIntervalsError] = useState<string | null>(null)
   const [intervalsDisconnecting, setIntervalsDisconnecting] = useState(false)
-
-  const connected = searchParams.get('connected')
-  const error = searchParams.get('error')
-
-  useEffect(() => {
-    if (!id) return
-    athleteApi.getStravaStatus(id)
-      .then(setStravaStatus)
-      .catch(() => setStravaStatus({ connected: false }))
-  }, [id, connected])
 
   useEffect(() => {
     if (!id) return
@@ -33,8 +21,6 @@ export default function AthleteSettings() {
   }, [id])
 
   if (!athlete) return <div className="text-gray-400 text-center py-20">Loading...</div>
-
-  const stravaConnectUrl = athleteApi.getStravaConnectUrl(id!)
 
   const handleIntervalsConnect = async (e: FormEvent) => {
     e.preventDefault()
@@ -64,17 +50,6 @@ export default function AthleteSettings() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-6">Settings</h1>
-
-      {connected && (
-        <div className="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-4 text-sm">
-          Strava connected successfully!
-        </div>
-      )}
-      {error && (
-        <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4 text-sm">
-          Error: {error.replace(/_/g, ' ')}
-        </div>
-      )}
 
       {/* Athlete Profile */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-4">
@@ -126,47 +101,6 @@ export default function AthleteSettings() {
           </div>
         </div>
       )}
-
-      {/* Strava Connection */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-4">
-        <h2 className="text-lg font-semibold mb-4">Strava Connection</h2>
-        {stravaStatus?.connected ? (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-green-400 text-sm">Connected</span>
-              {stravaStatus.stravaAthleteId && (
-                <span className="text-gray-500 text-xs">(Strava ID: {stravaStatus.stravaAthleteId})</span>
-              )}
-            </div>
-            <p className="text-gray-400 text-sm mb-4">
-              Strava is connected. Go to Activities to sync your runs.
-            </p>
-            <a
-              href={stravaConnectUrl}
-              className="inline-block px-4 py-2 border border-orange-600 text-orange-400 hover:bg-orange-900 text-sm rounded-lg transition-colors"
-            >
-              Reconnect Strava
-            </a>
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-gray-500 rounded-full" />
-              <span className="text-gray-400 text-sm">Not connected</span>
-            </div>
-            <p className="text-gray-400 text-sm mb-4">
-              Connect your Strava account to sync running activities.
-            </p>
-            <a
-              href={stravaConnectUrl}
-              className="inline-block px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
-            >
-              Connect Strava
-            </a>
-          </div>
-        )}
-      </div>
 
       {/* intervals.icu Connection */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">

@@ -9,7 +9,6 @@ export const mockAthlete: Athlete = {
   fitnessLevel: 'INTERMEDIATE',
   goalType: 'TARGET_TIME',
   trailAccess: false,
-  stravaEnabled: false,
   intervalsIcuEnabled: false,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
@@ -48,9 +47,5 @@ export const handlers = [
 
   http.get('/api/athletes/:id/dashboard/summary', () => {
     return HttpResponse.json(mockDashboard)
-  }),
-
-  http.get('/api/athletes/:id/auth/strava/status', () => {
-    return HttpResponse.json({ connected: false })
   }),
 ]

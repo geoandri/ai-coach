@@ -26,7 +26,6 @@ describe('createAthlete', () => {
     expect(athlete.experienceYears).toBeNull()
     expect(athlete.currentWeeklyKm).toBeNull()
     expect(athlete.trailAccess).toBe(false)
-    expect(athlete.stravaEnabled).toBe(false)
     expect(athlete.id).toBeGreaterThan(0)
   })
 
@@ -141,10 +140,5 @@ describe('toDto boolean conversion', () => {
     const athlete = createAthlete({ name: 'Leo', trailAccess: false })
     const fetched = getAthlete(athlete.id)
     expect(fetched!.trailAccess).toBe(false)
-  })
-
-  it('strava_enabled=0 → stravaEnabled=false by default', () => {
-    const athlete = createAthlete({ name: 'Mia' })
-    expect(athlete.stravaEnabled).toBe(false)
   })
 })

@@ -3,8 +3,6 @@ import * as athleteService from '../services/athleteService.js'
 import * as trainingPlanService from '../services/trainingPlanService.js'
 import * as planDiffService from '../services/planDiffService.js'
 import * as pdfExportService from '../services/pdfExportService.js'
-import * as stravaOAuthService from '../services/stravaOAuthService.js'
-import * as stravaActivityService from '../services/stravaActivityService.js'
 import * as intervalsIcuService from '../services/intervalsIcuService.js'
 import * as dashboardService from '../services/dashboardService.js'
 import type {
@@ -158,54 +156,14 @@ export async function athleteRoutes(app: FastifyInstance) {
     return planDiffService.getPlanVsActual(Number(request.params.id), startDate, endDate)
   })
 
-  // ── Strava ────────────────────────────────────────────────────────────────
-  app.get<{ Params: { id: string } }>(
-    '/api/athletes/:id/auth/strava',
-    async (request, reply) => {
-      const url = stravaOAuthService.buildAuthorizationUrl(Number(request.params.id))
-      return reply.code(302).header('Location', url).send()
-    }
-  )
-
-  app.get<{ Params: { id: string } }>(
-    '/api/athletes/:id/auth/strava/status',
-    async (request) => {
-      const id = Number(request.params.id)
-      const hasToken = stravaOAuthService.hasTokenForAthlete(id)
-      if (hasToken) {
-        const token = await stravaOAuthService.getValidTokenForAthlete(id)
-        return { connected: true, stravaAthleteId: token?.athleteId ?? 0 }
-      }
-      return { connected: false }
-    }
-  )
-
+  // ── Activities ────────────────────────────────────────────────────────────
   app.get<{
     Params: { id: string }
-    Querystring: { afterDate?: string; provider?: string }
+    Querystring: { afterDate?: string }
   }>('/api/athletes/:id/activities/sync', async (request) => {
     const internalAthleteId = Number(request.params.id)
-    const { afterDate, provider } = request.query
-
-    const stravaConnected = stravaOAuthService.hasTokenForAthlete(internalAthleteId)
-    const intervalsConnected = intervalsIcuService.hasTokenForAthlete(internalAthleteId)
-
-    if (provider === 'intervals_icu') {
-      return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
-    }
-    if (provider === 'strava') {
-      return stravaActivityService.syncActivitiesForAthlete(internalAthleteId, afterDate)
-    }
-    if (stravaConnected && intervalsConnected) {
-      return {
-        syncedCount: 0,
-        message: 'Multiple providers active. Specify ?provider=strava or ?provider=intervals_icu',
-      }
-    }
-    if (intervalsConnected) {
-      return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
-    }
-    return stravaActivityService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    const { afterDate } = request.query
+    return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
   })
 
   app.get<{
@@ -215,17 +173,7 @@ export async function athleteRoutes(app: FastifyInstance) {
     const internalAthleteId = Number(request.params.id)
     const page = Number(request.query.page ?? 0)
     const size = Number(request.query.size ?? 20)
-
-    const stravaPage = stravaActivityService.getActivitiesForAthlete(internalAthleteId, 0, 10000)
-    const intervalsPage = intervalsIcuService.getActivitiesForAthlete(internalAthleteId, 0, 10000)
-
-    const combined = [...stravaPage.content, ...intervalsPage.content].sort(
-      (a, b) => b.activityDate.localeCompare(a.activityDate)
-    )
-    const totalElements = combined.length
-    const totalPages = Math.ceil(totalElements / size)
-    const content = combined.slice(page * size, page * size + size)
-    return { content, totalElements, totalPages, number: page, size }
+    return intervalsIcuService.getActivitiesForAthlete(internalAthleteId, page, size)
   })
 
   // ── intervals.icu ─────────────────────────────────────────────────────────

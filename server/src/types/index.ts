@@ -25,8 +25,6 @@ export interface AthleteDto {
   raceDate: string | null   // ISO YYYY-MM-DD
   raceDistanceKm: number | null
   raceElevationM: number | null
-  stravaEnabled: boolean
-  stravaAthleteId: number | null
   intervalsIcuEnabled: boolean
   intervalsIcuAthleteId: string | null
   createdAt: string         // ISO-8601

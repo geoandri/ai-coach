@@ -28,8 +28,6 @@ function toDto(row: Record<string, unknown>): AthleteDto {
     raceDate: (row.race_date as string | null) ?? null,
     raceDistanceKm: (row.race_distance_km as number | null) ?? null,
     raceElevationM: (row.race_elevation_m as number | null) ?? null,
-    stravaEnabled: Boolean(row.strava_enabled),
-    stravaAthleteId: (row.strava_athlete_id as number | null) ?? null,
     intervalsIcuEnabled: Boolean(row.intervals_icu_enabled),
     intervalsIcuAthleteId: (row.intervals_icu_athlete_id as string | null) ?? null,
     createdAt: row.created_at as string,
@@ -55,8 +53,8 @@ export function createAthlete(req: CreateAthleteRequest): AthleteDto {
       preferred_long_run_day, injuries, strength_training_frequency,
       goal_type, target_finish_time, trail_access, coach_notes,
       athlete_summary, race_name, race_date, race_distance_km,
-      race_elevation_m, strava_enabled, created_at, updated_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
+      race_elevation_m, created_at, updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       req.name,
       req.email ?? null,
@@ -145,18 +143,6 @@ export function addCoachNote(id: number, note: string): AthleteDto | null {
   ])
   saveDb()
   return getAthlete(id)!
-}
-
-export function linkStravaAthlete(internalAthleteId: number, stravaAthleteId: number): boolean {
-  const existing = getAthlete(internalAthleteId)
-  if (!existing) return false
-
-  run(
-    'UPDATE athletes SET strava_athlete_id = ?, strava_enabled = 1, updated_at = ? WHERE id = ?',
-    [stravaAthleteId, new Date().toISOString(), internalAthleteId]
-  )
-  saveDb()
-  return true
 }
 
 export function linkIntervalsIcuAthlete(

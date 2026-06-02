@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAthleteActivities } from '../hooks/useAthleteActivities'
-import { useAthlete } from '../hooks/useAthletes'
 import { ActivityList } from '../components/ActivityList'
 import { athleteApi } from '../api/athleteApi'
 
@@ -9,23 +8,15 @@ export default function AthleteActivities() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
   const { data, loading, error, page, setPage, reload } = useAthleteActivities(id)
-  const { data: athlete } = useAthlete(id)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
-  const [selectedProvider, setSelectedProvider] = useState<'strava' | 'intervals_icu' | undefined>(undefined)
-
-  const bothActive = Boolean(athlete?.stravaEnabled && athlete?.intervalsIcuEnabled)
 
   const handleSync = async () => {
     if (!id) return
-    if (bothActive && !selectedProvider) {
-      setSyncMsg('Please select a provider to sync from.')
-      return
-    }
     setSyncing(true)
     setSyncMsg(null)
     try {
-      const result = await athleteApi.syncActivities(id, selectedProvider)
+      const result = await athleteApi.syncActivities(id)
       setSyncMsg(result.message)
       reload()
     } catch (e: unknown) {
@@ -35,54 +26,17 @@ export default function AthleteActivities() {
     }
   }
 
-  function syncButtonLabel() {
-    if (syncing) return 'Syncing...'
-    if (bothActive) {
-      if (selectedProvider === 'strava') return 'Sync from Strava'
-      if (selectedProvider === 'intervals_icu') return 'Sync from intervals.icu'
-      return 'Sync...'
-    }
-    if (athlete?.intervalsIcuEnabled) return 'Sync from intervals.icu'
-    return 'Sync from Strava'
-  }
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold">Activities</h1>
-        <div className="flex items-center gap-2">
-          {bothActive && (
-            <>
-              <button
-                onClick={() => setSelectedProvider('strava')}
-                className={`px-3 py-1 text-xs rounded-lg border transition-colors ${
-                  selectedProvider === 'strava'
-                    ? 'bg-orange-600 border-orange-600 text-white'
-                    : 'border-gray-600 text-gray-400 hover:border-orange-600 hover:text-orange-400'
-                }`}
-              >
-                Strava
-              </button>
-              <button
-                onClick={() => setSelectedProvider('intervals_icu')}
-                className={`px-3 py-1 text-xs rounded-lg border transition-colors ${
-                  selectedProvider === 'intervals_icu'
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'border-gray-600 text-gray-400 hover:border-blue-600 hover:text-blue-400'
-                }`}
-              >
-                intervals.icu
-              </button>
-            </>
-          )}
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-white text-sm rounded-lg transition-colors"
-          >
-            {syncButtonLabel()}
-          </button>
-        </div>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+        >
+          {syncing ? 'Syncing...' : 'Sync from intervals.icu'}
+        </button>
       </div>
 
       {syncMsg && (

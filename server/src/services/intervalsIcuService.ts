@@ -99,9 +99,17 @@ export function removeToken(internalAthleteId: number): void {
   saveDb()
 }
 
+function getEnvCredentials(): { athleteId: string; apiKey: string } | null {
+  const athleteId = process.env.INTERVALS_ICU_ATHLETE_ID
+  const apiKey = process.env.INTERVALS_ICU_API_KEY
+  if (athleteId && apiKey) return { athleteId, apiKey }
+  return null
+}
+
 export function hasTokenForAthlete(internalAthleteId: number): boolean {
   const row = queryOne('SELECT id FROM intervals_icu_tokens WHERE internal_athlete_id = ?', [internalAthleteId])
-  return row !== null
+  if (row !== null) return true
+  return getEnvCredentials() !== null
 }
 
 export function getTokenForAthlete(
@@ -110,21 +118,12 @@ export function getTokenForAthlete(
   return queryOne('SELECT * FROM intervals_icu_tokens WHERE internal_athlete_id = ?', [internalAthleteId])
 }
 
-export async function syncActivitiesForAthlete(
+async function syncWithCredentials(
+  intervalsAthleteId: string,
+  apiKey: string,
   internalAthleteId: number,
   afterDate?: string
 ): Promise<SyncResultDto> {
-  const token = getTokenForAthlete(internalAthleteId)
-  if (!token) {
-    return {
-      syncedCount: 0,
-      message: `No intervals.icu token found for athlete ${internalAthleteId}. Please connect intervals.icu first.`,
-    }
-  }
-
-  const athleteId = token.athlete_id as string
-  const apiKey = token.api_key as string
-
   const oldest = afterDate ?? '2000-01-01'
   let page = 0
   const perPage = 100
@@ -132,7 +131,7 @@ export async function syncActivitiesForAthlete(
 
   while (true) {
     const resp = await axios.get<unknown[]>(
-      `${INTERVALS_API_BASE}/athlete/${athleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${page * perPage}`,
+      `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${page * perPage}`,
       { headers: { Authorization: authHeader(apiKey) } }
     )
     const activities = resp.data as Record<string, unknown>[]
@@ -150,7 +149,7 @@ export async function syncActivitiesForAthlete(
 
       if (existing.length === 0) {
         try {
-          const p = parseActivity(activity, athleteId, internalAthleteId)
+          const p = parseActivity(activity, intervalsAthleteId, internalAthleteId)
           run(
             `INSERT INTO intervals_icu_activities
                (intervals_id, athlete_id, internal_athlete_id, name, sport_type, activity_date, start_datetime,
@@ -183,6 +182,24 @@ export async function syncActivitiesForAthlete(
 
   saveDb()
   return { syncedCount: totalSynced, message: `Successfully synced ${totalSynced} new activities` }
+}
+
+export async function syncActivitiesForAthlete(
+  internalAthleteId: number,
+  afterDate?: string
+): Promise<SyncResultDto> {
+  const token = getTokenForAthlete(internalAthleteId)
+  if (token) {
+    return syncWithCredentials(token.athlete_id as string, token.api_key as string, internalAthleteId, afterDate)
+  }
+  const env = getEnvCredentials()
+  if (env) {
+    return syncWithCredentials(env.athleteId, env.apiKey, internalAthleteId, afterDate)
+  }
+  return {
+    syncedCount: 0,
+    message: 'No intervals.icu credentials found. Connect via Settings or set INTERVALS_ICU_ATHLETE_ID / INTERVALS_ICU_API_KEY in .env.',
+  }
 }
 
 export function getActivitiesForAthlete(

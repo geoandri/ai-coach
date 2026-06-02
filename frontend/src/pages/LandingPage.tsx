@@ -32,7 +32,7 @@ export default function LandingPage() {
         <p className="text-gray-400 text-base leading-relaxed">
           AI Coach is a platform where an AI agent acts as a personal coach. It interviews athletes,
           generates periodized training plans, and tracks week-by-week adherence. The AI runs
-          entirely in Claude — this UI is the coaching dashboard. Strava integration is optional —
+          entirely in Claude — this UI is the coaching dashboard. intervals.icu integration is optional —
           it lets the coach import your training history automatically, but the app works fully
           without it.
         </p>
@@ -95,8 +95,8 @@ export default function LandingPage() {
           <p className="text-gray-400 text-sm">
             Claude will ask for the athlete's name, load their profile if one exists, and guide the
             session from there. New athletes are created through the conversation; their profiles and
-            training plans appear here automatically. If Strava is connected the coach will import
-            your training history automatically — otherwise it will ask a few questions instead.
+            training plans appear here automatically. If intervals.icu is connected the coach will
+            import your training history automatically — otherwise it will ask a few questions instead.
           </p>
           <NavLink
             to="/athletes"
@@ -120,7 +120,7 @@ export default function LandingPage() {
             <div>
               <p className="text-white text-sm font-medium">trail-running-coach</p>
               <p className="text-gray-400 text-xs mt-0.5">
-                Expert trail running and ultramarathon coach. Covers Strava intake, periodized plan
+                Expert trail running and ultramarathon coach. Covers intervals.icu intake, periodized plan
                 generation, race day strategy, and ongoing check-ins.
               </p>
             </div>
@@ -130,7 +130,7 @@ export default function LandingPage() {
             <div>
               <p className="text-white text-sm font-medium">road-running-coach</p>
               <p className="text-gray-400 text-xs mt-0.5">
-                Road running coach specialised in 5 km, 10 km, half-marathon, and marathon. Covers Strava intake, distance-specific periodized plans, race day strategy, and ongoing check-ins.
+                Road running coach specialised in 5 km, 10 km, half-marathon, and marathon. Covers intervals.icu intake, distance-specific periodized plans, race day strategy, and ongoing check-ins.
               </p>
             </div>
           </div>

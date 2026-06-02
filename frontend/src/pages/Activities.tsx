@@ -31,7 +31,7 @@ export default function Activities() {
           disabled={syncing}
           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-white text-sm rounded-lg transition-colors"
         >
-          {syncing ? 'Syncing...' : 'Sync from Strava'}
+          {syncing ? 'Syncing...' : 'Sync from intervals.icu'}
         </button>
       </div>
 

@@ -41,11 +41,4 @@ describe('athleteApi', () => {
       expect(result.name).toBe('New Runner')
     })
   })
-
-  describe('getStravaConnectUrl', () => {
-    it('returns correct URL string without making HTTP call', () => {
-      const url = athleteApi.getStravaConnectUrl(5)
-      expect(url).toBe('/api/athletes/5/auth/strava')
-    })
-  })
 })

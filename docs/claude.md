@@ -1,6 +1,6 @@
 # AI Coach — Claude Context
 
-AI-assisted coaching platform. An AI agent acts as a personal coach: gathers athlete info via conversation, generates personalised training plans, and tracks adherence by syncing Strava activities.
+AI-assisted coaching platform. An AI agent acts as a personal coach: gathers athlete info via conversation, generates personalised training plans, and tracks adherence by syncing activities from intervals.icu.
 
 For platform-level agent behaviour (MCP rules, tool usage, check-in workflow) see @docs/personas/_base.md.
 For the trail running coach persona see @docs/personas/trail-running-coach.md.
@@ -41,7 +41,7 @@ npm run dev
 
 ```
 frontend/        React SPA — athlete profiles, training plans, activity dashboard
-server/          Fastify REST API — business logic, SQLite DB, Strava OAuth + sync
+server/          Fastify REST API — business logic, SQLite DB, intervals.icu sync
 mcp/             MCP server — wraps backend API as tools for AI agents
 docs/personas/   Coach persona prompts loaded by MCP server at startup
 ```
@@ -59,10 +59,11 @@ The MCP server uses **Streamable HTTP transport**. Agents discover tools at runt
 | `PORT` | `3000` | Web server port |
 | `MCP_PORT` | `3001` | MCP server port |
 | `DATABASE_PATH` | `./data/ai_coach.db` | SQLite file location |
-| `STRAVA_CLIENT_ID` | — | Required for Strava OAuth |
-| `STRAVA_CLIENT_SECRET` | — | Required for Strava OAuth |
-| `STRAVA_REDIRECT_URI` | `http://localhost:3000/api/auth/strava/callback` | OAuth callback |
-| `FRONTEND_BASE_URL` | `http://localhost:3000` | Post-OAuth redirect base |
+| `INTERVALS_ICU_ATHLETE_ID` | — | Optional global fallback athlete ID (e.g. `i12345`) |
+| `INTERVALS_ICU_API_KEY` | — | Optional global fallback API key |
+| `FRONTEND_BASE_URL` | `http://localhost:3000` | Base URL for redirect links |
+
+`INTERVALS_ICU_ATHLETE_ID` and `INTERVALS_ICU_API_KEY` let the coach sync activities during onboarding before per-athlete credentials are entered in the UI. Per-athlete credentials (set via the athlete's Settings page) take priority.
 
 ---
 
@@ -70,20 +71,20 @@ The MCP server uses **Streamable HTTP transport**. Agents discover tools at runt
 
 - **Athlete** — profile with fitness level, goals, injuries, coach notes, AI-generated athlete summary, and goal race details (name, date, distance, elevation)
 - **TrainingPlan** — one per athlete; weeks → daily workouts
-- **StravaToken** — OAuth tokens per athlete, auto-refreshed
-- **StravaActivity** — synced runs/trail runs from Strava
+- **intervals_icu_tokens** — API credentials per athlete
+- **intervals_icu_activities** — synced runs/trail runs from intervals.icu
 
 One plan per athlete. Delete existing plan before creating a replacement.
 
 ---
 
-## Strava Integration
+## intervals.icu Integration
 
-- OAuth 2.0 flow; scopes: `read, activity:read_all`
-- Athlete connects via `/api/athletes/:id/auth/strava`
+- HTTP Basic Auth: `Authorization: Basic base64(apiKey + ':' + '')`
+- Athlete connects via the athlete Settings page in the UI, or via `.env` global credentials
 - Activities filtered to `Run` and `TrailRun` types
-- Tokens auto-refresh (5-minute expiry buffer)
 - Sync via UI, `GET /api/athletes/:id/activities/sync`, or MCP `sync_activities` tool
+- The coach should **ask permission before syncing** — do not call `sync_activities` silently
 
 ---
 
@@ -93,7 +94,7 @@ Athletes & profiles: `list_athletes`, `get_athlete`, `create_athlete`, `update_a
 
 Training plans: `get_training_plan`, `get_week_detail`, `create_training_plan`, `update_training_plan`, `delete_training_plan`
 
-Strava & adherence: `sync_activities`, `get_strava_connect_url`, `get_dashboard_summary`, `get_plan_vs_actual`
+Activities & adherence: `sync_activities`, `get_dashboard_summary`, `get_plan_vs_actual`
 
 ---
 
