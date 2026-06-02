@@ -84,7 +84,7 @@ One plan per athlete. Delete existing plan before creating a replacement.
 - Athlete connects via the athlete Settings page in the UI, or via `.env` global credentials
 - Activities filtered to `Run` and `TrailRun` types
 - Sync via UI, `GET /api/athletes/:id/activities/sync`, or MCP `sync_activities` tool
-- The coach should **ask permission before syncing** — do not call `sync_activities` silently
+- The coach syncs automatically when intervals.icu is configured (`intervalsIcuEnabled: true`); no permission prompt is needed
 
 ---
 
