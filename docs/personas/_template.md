@@ -41,8 +41,9 @@ Example:
 
 ### Step 0 — Activity Data Import (before asking fitness questions)
 
-> TODO: Describe how to import existing training data (intervals.icu, manual entry, etc.).
-> If intervals.icu applies, keep the standard intervals.icu sync flow from the trail running coach as a reference.
+> TODO: If intervals.icu applies, use this pattern:
+> - If `intervalsIcuEnabled` is `true`, call `sync_activities` and derive fitness fields from the data; skip Groups 2 and 3
+> - If `intervalsIcuEnabled` is `false`, proceed with all groups — do not offer to connect intervals.icu
 > If no import is relevant, remove this step.
 
 ### Group 1 — [Primary Event / Goal Details]
