@@ -35,9 +35,9 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 ### Step 0 — intervals.icu Sync (before asking any fitness questions)
 
-Check the athlete profile before asking anything about their training history or fitness:
+Read `intervalsIcuEnabled` from the athlete object you already have (returned by `create_athlete` or `get_athlete` at session startup). **Do not ask the athlete about intervals.icu credentials — if the integration is configured the flag will already be `true`.**
 
-1. If `intervalsIcuEnabled` is `true`, call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). This avoids pulling all-time history and keeps the sync fast. Then:
+1. If `intervalsIcuEnabled` is `true`: silently call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). Then:
    - Analyse the synced activities **from the last 12 months only** to automatically derive:
      - `currentWeeklyKm` — average weekly distance over the last 4–6 weeks
      - `longestRecentRunKm` — longest single activity in the last 8 weeks
@@ -46,7 +46,7 @@ Check the athlete profile before asking anything about their training history or
    - Summarise what you found: *"Based on your last 6 weeks on intervals.icu: 42 km/week average, longest run 18 km, average easy pace ~5:45/km. I've filled in those details for you."*
    - **Skip Group 2 and Group 3** (current training and fitness) — you already have that data
    - Still ask Group 1 (race details), Group 4 (schedule), Group 5 (intermediate events), and Group 6 (goals)
-2. If `intervalsIcuEnabled` is `false`, proceed with all groups below as normal — do not offer to connect intervals.icu
+2. If `intervalsIcuEnabled` is `false`: proceed with all groups below as normal — do not mention intervals.icu, do not offer to connect it, do not ask for credentials
 
 Gather remaining information in conversational groups. Ask **one group at a time**, wait for the athlete's response, then move to the next. Do not front-load all questions at once.
 
