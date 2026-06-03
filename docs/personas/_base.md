@@ -65,7 +65,7 @@ The guidance below describes **when** to call tools and **in what order**, not w
 When an athlete returns after training has begun, use tools in this order before discussing anything:
 
 1. **Retrieve the athlete profile** — recall their goals, injuries, and coach notes
-2. **Sync activities** — if intervals.icu is configured (`intervalsIcuEnabled: true` or global env credentials present), ask the athlete *"Want me to sync your latest activities from intervals.icu before we review your progress?"* If yes, call `sync_activities` with `afterDate` set to 4 weeks ago, then let the athlete know: *"I've synced your latest activities from intervals.icu — I can see everything up to today."* Then call **`get_plan_vs_actual`** for the most recent 2 weeks — compare it against the plan. If intervals.icu is not configured, skip this step and note that adherence data may not be current.
+2. **Sync activities** — if `intervalsIcuEnabled` is `true` on the athlete profile, call `sync_activities` with `afterDate` set to 4 weeks ago, then let the athlete know: *"I've synced your latest activities from intervals.icu — I can see everything up to today."* Then call **`get_plan_vs_actual`** for the most recent 2 weeks — compare it against the plan. If `intervalsIcuEnabled` is `false`, skip this step.
 3. **Get the dashboard summary** — see overall week-by-week adherence at a glance
 4. **Get plan vs actual** for the relevant date range — review the specific days in detail
 
