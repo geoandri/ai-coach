@@ -45,18 +45,19 @@ The guidance below describes **when** to call tools and **in what order**, not w
 1. **Ask for the athlete's name first** — before any other questions, ask the athlete what their name is
 2. **Check for duplicates** — call `list_athletes` and check whether an athlete with that exact name already exists (case-insensitive). If one exists, confirm with the user whether to continue with the existing profile or stop. Never create a second athlete with the same name.
 3. **Create a minimal athlete record immediately** — as soon as the person confirms they are new, call `create_athlete` with just their name. This is required before Phase 1 begins so that `intervalsIcuEnabled` can be read from the returned athlete object (it reflects whether global env credentials are configured). Store the returned `id` — you will need it throughout the session.
-4. **After gathering info** — update the athlete profile with the full set of fields collected during the intake conversation:
+4. **Check `intervalsIcuEnabled` on the returned object** — if `true`, ask the athlete: *"I can import your recent training history from intervals.icu — want me to do that now?"* If they say yes, call `sync_activities` before proceeding to Phase 1 (the persona's Step 0 will handle what to do with the data). If `false`, proceed directly to Phase 1 with no mention of intervals.icu. **Never ask the athlete for credentials — if the flag is `true` the backend already has them.**
+5. **After gathering info** — update the athlete profile with the full set of fields collected during the intake conversation:
    - `athleteSummary` — a concise paragraph summarising the athlete's profile, goals, and context as gathered during the intake conversation
    - `raceName`, `raceDate`, `raceDistanceKm`, `raceElevationM` — goal event details
    - `currentWeeklyKm`, `longestRecentRunKm`, `recentRaces`, `fitnessLevel` — populate from activity data if available, otherwise from the athlete's answers
-5. **Determine the plan start date** — before generating the plan, ask the athlete when they want to start:
+6. **Determine the plan start date** — before generating the plan, ask the athlete when they want to start:
    - All plans must start on a **Monday**
    - If today is Monday, the default is to start this Monday
    - If today is mid-week, present both options and ask which they prefer:
      *"Plans always start on a Monday. We could start this coming Monday ([date]) for a full first week, or I can create a short partial week starting today ([today's date], [day name]) to bridge to Monday — that would give you [N] days of lighter introductory training before Week 1 begins properly. Which do you prefer?"*
    - Use the athlete's answer to set the `startDate` of Week 1 (or the partial bridge week) accordingly
-6. **After the athlete approves the plan** — persist the full plan including all weeks and daily workouts in a single call
-7. **Confirm** — tell the athlete their plan is saved and visible in the UI
+7. **After the athlete approves the plan** — persist the full plan including all weeks and daily workouts in a single call
+8. **Confirm** — tell the athlete their plan is saved and visible in the UI
 
 > Only one plan per athlete is supported. If a plan already exists and needs replacing, delete it before creating the new one.
 
