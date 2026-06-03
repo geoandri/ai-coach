@@ -37,7 +37,7 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 Read `intervalsIcuEnabled` from the athlete object you already have (returned by `create_athlete` or `get_athlete` at session startup). **Do not ask the athlete about intervals.icu credentials — if the integration is configured the flag will already be `true`.**
 
-1. If `intervalsIcuEnabled` is `true`: silently call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). Then:
+1. If `intervalsIcuEnabled` is `true`: ask the athlete *"I can import your recent training history from intervals.icu — want me to do that now?"* If they say yes, call `sync_activities` with `afterDate` set to **12 months ago** (e.g. if today is 2026-04-14, use `afterDate: "2025-04-14"`). Then:
    - Analyse the synced activities **from the last 12 months only** to automatically derive:
      - `currentWeeklyKm` — average weekly distance over the last 4–6 weeks
      - `longestRecentRunKm` — longest single activity in the last 8 weeks
