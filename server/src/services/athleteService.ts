@@ -1,5 +1,4 @@
 import { queryRows, queryOne, run, saveDb, lastInsertId } from '../db/client.js'
-import { hasTokenForAthlete } from './intervalsIcuService.js'
 import type {
   AthleteDto,
   CreateAthleteRequest,
@@ -29,7 +28,7 @@ function toDto(row: Record<string, unknown>): AthleteDto {
     raceDate: (row.race_date as string | null) ?? null,
     raceDistanceKm: (row.race_distance_km as number | null) ?? null,
     raceElevationM: (row.race_elevation_m as number | null) ?? null,
-    intervalsIcuEnabled: Boolean(row.intervals_icu_enabled) || hasTokenForAthlete(row.id as number),
+    intervalsIcuEnabled: Boolean(row.intervals_icu_enabled),
     intervalsIcuAthleteId: (row.intervals_icu_athlete_id as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -144,6 +143,17 @@ export function addCoachNote(id: number, note: string): AthleteDto | null {
   ])
   saveDb()
   return getAthlete(id)!
+}
+
+export function enableIntervalsIcu(internalAthleteId: number): boolean {
+  const existing = getAthlete(internalAthleteId)
+  if (!existing) return false
+  run('UPDATE athletes SET intervals_icu_enabled = 1, updated_at = ? WHERE id = ?', [
+    new Date().toISOString(),
+    internalAthleteId,
+  ])
+  saveDb()
+  return true
 }
 
 export function linkIntervalsIcuAthlete(

@@ -36,7 +36,6 @@ export const activityTools = [
       'Trigger an activity sync for an athlete. Pulls new runs from their connected intervals.icu account.',
       'Use afterDate (YYYY-MM-DD) to limit the sync to activities after a specific date.',
       'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.',
-      'Always ask the athlete for permission before syncing.'
     ].join(' '),
     inputSchema: {
       type: 'object' as const,
