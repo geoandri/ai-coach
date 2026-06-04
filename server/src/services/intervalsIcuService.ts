@@ -66,7 +66,7 @@ export async function validateCredentials(athleteId: string, apiKey: string): Pr
   try {
     await axios.get(
       `${INTERVALS_API_BASE}/athlete/${athleteId}/activities?oldest=${oldest}&limit=1`,
-      { headers: { Authorization: authHeader(apiKey) } }
+      { headers: { Authorization: authHeader(apiKey) }, timeout: 10000 }
     )
     return true
   } catch (err) {
@@ -121,13 +121,19 @@ export function getTokenForAthlete(
   return queryOne('SELECT * FROM intervals_icu_tokens WHERE internal_athlete_id = ?', [internalAthleteId])
 }
 
+function defaultOldest(): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() - 6)
+  return d.toISOString().substring(0, 10)
+}
+
 async function syncWithCredentials(
   intervalsAthleteId: string,
   apiKey: string,
   internalAthleteId: number,
   afterDate?: string
 ): Promise<SyncResultDto> {
-  const oldest = afterDate ?? '2000-01-01'
+  const oldest = afterDate ?? defaultOldest()
   let page = 0
   const perPage = 100
   let totalSynced = 0
@@ -135,7 +141,7 @@ async function syncWithCredentials(
   while (true) {
     const resp = await axios.get<unknown[]>(
       `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${page * perPage}`,
-      { headers: { Authorization: authHeader(apiKey) } }
+      { headers: { Authorization: authHeader(apiKey) }, timeout: 15000 }
     )
     const activities = resp.data as Record<string, unknown>[]
     if (!activities || activities.length === 0) break
