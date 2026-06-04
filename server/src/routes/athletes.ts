@@ -163,7 +163,11 @@ export async function athleteRoutes(app: FastifyInstance) {
   }>('/api/athletes/:id/activities/sync', async (request) => {
     const internalAthleteId = Number(request.params.id)
     const { afterDate } = request.query
-    return intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    const result = await intervalsIcuService.syncActivitiesForAthlete(internalAthleteId, afterDate)
+    if (result.syncedCount >= 0 && intervalsIcuService.hasEnvCredentials()) {
+      athleteService.enableIntervalsIcu(internalAthleteId)
+    }
+    return result
   })
 
   app.get<{

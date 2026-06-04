@@ -106,10 +106,13 @@ function getEnvCredentials(): { athleteId: string; apiKey: string } | null {
   return null
 }
 
+export function hasEnvCredentials(): boolean {
+  return getEnvCredentials() !== null
+}
+
 export function hasTokenForAthlete(internalAthleteId: number): boolean {
   const row = queryOne('SELECT id FROM intervals_icu_tokens WHERE internal_athlete_id = ?', [internalAthleteId])
-  if (row !== null) return true
-  return getEnvCredentials() !== null
+  return row !== null
 }
 
 export function getTokenForAthlete(

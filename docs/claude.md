@@ -59,11 +59,11 @@ The MCP server uses **Streamable HTTP transport**. Agents discover tools at runt
 | `PORT` | `3000` | Web server port |
 | `MCP_PORT` | `3001` | MCP server port |
 | `DATABASE_PATH` | `./data/ai_coach.db` | SQLite file location |
-| `INTERVALS_ICU_ATHLETE_ID` | — | Optional global fallback athlete ID (e.g. `i12345`) |
-| `INTERVALS_ICU_API_KEY` | — | Optional global fallback API key |
+| `INTERVALS_ICU_ATHLETE_ID` | — | Used for first-time sync during new athlete onboarding (e.g. `i12345`) |
+| `INTERVALS_ICU_API_KEY` | — | Used for first-time sync during new athlete onboarding |
 | `FRONTEND_BASE_URL` | `http://localhost:3000` | Base URL for redirect links |
 
-`INTERVALS_ICU_ATHLETE_ID` and `INTERVALS_ICU_API_KEY` let the coach sync activities during onboarding before per-athlete credentials are entered in the UI. Per-athlete credentials (set via the athlete's Settings page) take priority.
+`INTERVALS_ICU_ATHLETE_ID` and `INTERVALS_ICU_API_KEY` are only needed for the initial activity import during onboarding. Once synced, the credentials are stored in the database and these env vars are no longer used.
 
 ---
 
@@ -81,10 +81,13 @@ One plan per athlete. Delete existing plan before creating a replacement.
 ## intervals.icu Integration
 
 - HTTP Basic Auth: `Authorization: Basic base64(apiKey + ':' + '')`
-- Athlete connects via the athlete Settings page in the UI, or via `.env` global credentials
+- Credentials are stored per-athlete in `intervals_icu_tokens` (set via the athlete Settings page in the UI)
+- `INTERVALS_ICU_ATHLETE_ID` / `INTERVALS_ICU_API_KEY` in `.env` are used only for the **first sync** during new athlete onboarding — on success the credentials are written to the DB and the env vars are no longer needed
+- `intervalsIcuEnabled` on the athlete object is `true` only when a DB token row exists
 - Activities filtered to `Run` and `TrailRun` types
 - Sync via UI, `GET /api/athletes/:id/activities/sync`, or MCP `sync_activities` tool
-- The coach syncs automatically when intervals.icu is configured (`intervalsIcuEnabled: true`); no permission prompt is needed
+- During **new athlete onboarding**: the coach asks if the athlete wants to import their history before creating the profile; calls `sync_activities` if yes
+- During **check-ins**: the coach syncs automatically if `intervalsIcuEnabled` is `true`
 
 ---
 
