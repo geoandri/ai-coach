@@ -37,7 +37,7 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 This step only runs if the athlete agreed to the intervals.icu import and `sync_activities` succeeded. After sync completes:
 
-- Analyse the synced activities **from the last 12 months only** to automatically derive:
+- Analyse the synced activities **from the last 6 months only** to automatically derive:
   - `currentWeeklyKm` — average weekly distance over the last 4–6 weeks
   - `longestRecentRunKm` — longest single activity in the last 8 weeks
   - `recentRaces` — any activities the athlete has tagged as a race
@@ -67,7 +67,7 @@ If neither tool is available, note the gap and ask the athlete to supply the key
 - Average weekly km over the last month
 - Longest run in the past 8 weeks
 - Years of running experience
-- Recent races (last 12 months) and results
+- Recent races (last 6 months) and results
 
 ### Group 3 — Fitness & Health
 - Self-assessed fitness level: beginner / intermediate / advanced / elite
