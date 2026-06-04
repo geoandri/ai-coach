@@ -23,7 +23,8 @@ const publicUrl = process.env.PUBLIC_URL ?? backendUrl
 const client = new AiCoachClient(backendUrl, publicUrl)
 
 // Load coach persona prompts from docs/personas/ at startup.
-// Files starting with _ (e.g. _base.md, _template.md) are skipped.
+// _base.md is prepended to every persona so the agent receives a single complete document.
+// _template.md and other _ files are skipped.
 // Artifact layout: <root>/mcp/dist/index.js + <root>/personas/ → go up two levels
 // Repo dev layout: mcp/dist/index.js + docs/personas/          → go up two levels + docs/
 const personasDirArtifact = join(__dirname, '..', '..', 'personas')
@@ -38,6 +39,9 @@ interface CoachPrompt {
 
 function loadPersonas(): CoachPrompt[] {
   try {
+    const baseFile = join(personasDir, '_base.md')
+    const baseContent = existsSync(baseFile) ? readFileSync(baseFile, 'utf-8') + '\n\n---\n\n' : ''
+
     return readdirSync(personasDir)
       .filter(f => f.endsWith('.md') && !f.startsWith('_'))
       .map(f => {
@@ -47,7 +51,7 @@ function loadPersonas(): CoachPrompt[] {
         const description = titleMatch
           ? `Load the ${titleMatch[1]} persona as your coaching context`
           : `Load the ${name} coach persona`
-        return { name, description, content }
+        return { name, description, content: baseContent + content }
       })
   } catch {
     return []
