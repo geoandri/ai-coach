@@ -151,6 +151,8 @@ async function syncWithCredentials(
   let page = 0
   const perPage = 100
   let totalSynced = 0
+  let emptyRunningPages = 0
+  const MAX_EMPTY_RUNNING_PAGES = 5
 
   log(`Starting sync for athlete ${intervalsAthleteId} (internal: ${internalAthleteId}), oldest=${oldest}`)
 
@@ -172,11 +174,13 @@ async function syncWithCredentials(
 
     log(`Page ${page + 1}: ${activities.length} activities received`)
     let pageInserted = 0
+    let pageRunning = 0
 
     for (const activity of activities) {
       const sportType = (activity.type as string | undefined) ?? ''
       if (!RUNNING_SPORT_TYPES.includes(sportType)) continue
 
+      pageRunning++
       const intervalsId = Number(activity.id)
       const existing = queryRows(
         'SELECT id, internal_athlete_id FROM intervals_icu_activities WHERE intervals_id = ?',
@@ -214,7 +218,24 @@ async function syncWithCredentials(
       }
     }
 
-    log(`Page ${page + 1}: inserted/updated ${pageInserted} running activities`)
+    log(`Page ${page + 1}: ${pageRunning} running activities, ${pageInserted} inserted/updated`)
+
+    // Stop when a full page has running activities but none are new — we've caught up
+    if (pageRunning > 0 && pageInserted === 0) {
+      log('All running activities on this page already synced — stopping')
+      break
+    }
+
+    // Stop when N consecutive pages have no running activities at all (non-runner athlete edge case)
+    if (pageRunning === 0) {
+      emptyRunningPages++
+      if (emptyRunningPages >= MAX_EMPTY_RUNNING_PAGES) {
+        log(`${MAX_EMPTY_RUNNING_PAGES} consecutive pages with no running activities — stopping`)
+        break
+      }
+    } else {
+      emptyRunningPages = 0
+    }
 
     if (activities.length < perPage) {
       log('Last page reached — sync complete')
