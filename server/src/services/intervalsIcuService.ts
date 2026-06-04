@@ -4,6 +4,16 @@ import type { ActivityDto, SyncResultDto, PagedResponse } from '../types/index.j
 
 const INTERVALS_API_BASE = 'https://intervals.icu/api/v1'
 const RUNNING_SPORT_TYPES = ['Run', 'TrailRun', 'VirtualRun']
+// intervals.icu rate limit is 10 req/s — stay well under it
+const REQUEST_DELAY_MS = 150
+
+function log(msg: string) {
+  console.log(`[intervals.icu] ${msg}`)
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 function authHeader(apiKey: string): string {
   return `Basic ${Buffer.from(`API_KEY:${apiKey}`).toString('base64')}`
@@ -63,16 +73,20 @@ export async function validateCredentials(athleteId: string, apiKey: string): Pr
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const oldest = thirtyDaysAgo.toISOString().substring(0, 10)
+  log(`Validating credentials for athlete ${athleteId}`)
   try {
     await axios.get(
       `${INTERVALS_API_BASE}/athlete/${athleteId}/activities?oldest=${oldest}&limit=1`,
       { headers: { Authorization: authHeader(apiKey) }, timeout: 10000 }
     )
+    log(`Credentials valid for athlete ${athleteId}`)
     return true
   } catch (err) {
     if (axios.isAxiosError(err) && err.response && [401, 403].includes(err.response.status)) {
+      log(`Credentials invalid for athlete ${athleteId} (HTTP ${err.response.status})`)
       return false
     }
+    log(`Credential check failed for athlete ${athleteId}: ${err instanceof Error ? err.message : String(err)}`)
     throw err
   }
 }
@@ -138,13 +152,26 @@ async function syncWithCredentials(
   const perPage = 100
   let totalSynced = 0
 
+  log(`Starting sync for athlete ${intervalsAthleteId} (internal: ${internalAthleteId}), oldest=${oldest}`)
+
   while (true) {
+    const skip = page * perPage
+    log(`Fetching page ${page + 1} (skip=${skip}, limit=${perPage})`)
+
+    if (page > 0) await sleep(REQUEST_DELAY_MS)
+
     const resp = await axios.get<unknown[]>(
-      `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${page * perPage}`,
+      `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${skip}`,
       { headers: { Authorization: authHeader(apiKey) }, timeout: 15000 }
     )
     const activities = resp.data as Record<string, unknown>[]
-    if (!activities || activities.length === 0) break
+    if (!activities || activities.length === 0) {
+      log(`Page ${page + 1} returned 0 activities — sync complete`)
+      break
+    }
+
+    log(`Page ${page + 1}: ${activities.length} activities received`)
+    let pageInserted = 0
 
     for (const activity of activities) {
       const sportType = (activity.type as string | undefined) ?? ''
@@ -173,6 +200,7 @@ async function syncWithCredentials(
             ]
           )
           totalSynced++
+          pageInserted++
         } catch {
           // skip duplicates
         }
@@ -182,14 +210,21 @@ async function syncWithCredentials(
           [internalAthleteId, existing[0].id as number]
         )
         totalSynced++
+        pageInserted++
       }
     }
 
-    if (activities.length < perPage) break
+    log(`Page ${page + 1}: inserted/updated ${pageInserted} running activities`)
+
+    if (activities.length < perPage) {
+      log('Last page reached — sync complete')
+      break
+    }
     page++
   }
 
   saveDb()
+  log(`Sync finished: ${totalSynced} new activities saved`)
   return { syncedCount: totalSynced, message: `Successfully synced ${totalSynced} new activities` }
 }
 
