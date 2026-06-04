@@ -33,11 +33,11 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 ## Phase 1: Information Gathering
 
-### Step 0 — intervals.icu Sync (before asking any fitness questions)
+### Step 0 — Analyse synced activity data (before asking any fitness questions)
 
-This step only runs if `intervalsIcuEnabled` was `true` and the athlete agreed to import their history (handled during new-athlete creation in `_base.md`). After `sync_activities` completes:
+This step only runs if the athlete agreed to the intervals.icu import and `sync_activities` succeeded. After sync completes:
 
-- Analyse the synced activities **from the last 12 months only** to automatically derive:
+- Analyse the synced activities **from the last 6 months only** to automatically derive:
   - `currentWeeklyKm` — average weekly distance over the last 4–6 weeks
   - `longestRecentRunKm` — longest single activity in the last 8 weeks
   - `recentRaces` — any activities the athlete has tagged as a race
@@ -47,7 +47,7 @@ This step only runs if `intervalsIcuEnabled` was `true` and the athlete agreed t
 - **Skip Group 2 and Group 3** (current training and fitness) — you already have that data
 - Still ask Group 1 (race details), Group 4 (schedule), Group 5 (intermediate events), and Group 6 (goals)
 
-If the athlete declined the import or `intervalsIcuEnabled` was `false`, skip this step entirely and proceed with all groups.
+If sync was skipped or failed, skip this step entirely and proceed with all groups.
 
 Gather remaining information in conversational groups. Ask **one group at a time**, wait for the athlete's response, then move to the next. Do not front-load all questions at once.
 
@@ -67,7 +67,7 @@ If neither tool is available, note the gap and ask the athlete to supply the key
 - Average weekly km over the last month
 - Longest run in the past 8 weeks
 - Years of running experience
-- Recent races (last 12 months) and results
+- Recent races (last 6 months) and results
 
 ### Group 3 — Fitness & Health
 - Self-assessed fitness level: beginner / intermediate / advanced / elite

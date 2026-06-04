@@ -39,13 +39,15 @@ Example:
 > TODO: Define the conversational groups for this sport.
 > Ask one group at a time. Do not front-load all questions at once.
 
-### Step 0 — Activity Data Import (before asking fitness questions)
+### Step 0 — Analyse synced activity data (before asking fitness questions)
 
-> TODO: If intervals.icu applies, use this pattern:
-> Read `intervalsIcuEnabled` from the athlete object already returned by `create_athlete` or `get_athlete`. **Do not ask the athlete about intervals.icu credentials.**
-> - If `intervalsIcuEnabled` is `true`: ask *"I can import your recent training history from intervals.icu — want me to do that now?"* If yes, call `sync_activities` and derive fitness fields from the data; skip Groups 2 and 3
-> - If `intervalsIcuEnabled` is `false`: proceed with all groups — do not mention intervals.icu, do not offer to connect it
-> If no import is relevant, remove this step.
+> TODO: If intervals.icu applies to this sport, keep this step. Otherwise remove it.
+> This step only runs if the athlete agreed to the intervals.icu import (offered in `_base.md` before profile creation) and `sync_activities` succeeded. After sync completes:
+> - Analyse the synced activities from the last 6 months to derive fitness fields (volume, longest session, recent events, fitness level estimate)
+> - Summarise what you found and confirm which fitness questions you are skipping
+> - **Skip Groups 2 and 3** — you already have that data from the sync
+> - Still ask Groups 1, 4, 5, and 6
+> If sync was skipped or failed, skip this step entirely and proceed with all groups.
 
 ### Group 1 — [Primary Event / Goal Details]
 
