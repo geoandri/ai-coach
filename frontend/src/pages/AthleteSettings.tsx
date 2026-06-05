@@ -7,43 +7,61 @@ export default function AthleteSettings() {
   const { athleteId } = useParams<{ athleteId: string }>()
   const id = athleteId ? Number(athleteId) : undefined
   const { data: athlete } = useAthlete(id)
-  const [intervalsStatus, setIntervalsStatus] = useState<{ connected: boolean; intervalsAthleteId?: string } | null>(null)
-  const [intervalsForm, setIntervalsForm] = useState({ athleteId: '', apiKey: '' })
-  const [intervalsConnecting, setIntervalsConnecting] = useState(false)
-  const [intervalsError, setIntervalsError] = useState<string | null>(null)
-  const [intervalsDisconnecting, setIntervalsDisconnecting] = useState(false)
+  const [intervalsStatus, setIntervalsStatus] = useState<{ connected: boolean; intervalsAthleteId?: string; envAvailable?: boolean } | null>(null)
+  const [connecting, setConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
+  const [disconnecting, setDisconnecting] = useState(false)
+  const [showManualForm, setShowManualForm] = useState(false)
+  const [manualForm, setManualForm] = useState({ athleteId: '', apiKey: '' })
+  const [manualConnecting, setManualConnecting] = useState(false)
+  const [manualError, setManualError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
     athleteApi.getIntervalsIcuStatus(id)
       .then(setIntervalsStatus)
-      .catch(() => setIntervalsStatus({ connected: false }))
+      .catch(() => setIntervalsStatus({ connected: false, envAvailable: false }))
   }, [id])
 
   if (!athlete) return <div className="text-gray-400 text-center py-20">Loading...</div>
 
-  const handleIntervalsConnect = async (e: FormEvent) => {
-    e.preventDefault()
-    setIntervalsConnecting(true)
-    setIntervalsError(null)
+  const handleConnect = async () => {
+    setConnecting(true)
+    setConnectError(null)
     try {
-      const result = await athleteApi.connectIntervalsIcu(id!, intervalsForm.athleteId, intervalsForm.apiKey)
-      setIntervalsStatus(result)
-      setIntervalsForm({ athleteId: '', apiKey: '' })
-    } catch {
-      setIntervalsError('Failed to connect. Check your Athlete ID and API key.')
+      const result = await athleteApi.connectIntervalsIcuFromEnv(id!)
+      setIntervalsStatus(prev => ({ ...prev, ...result }))
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      setConnectError(msg ?? 'Connection failed. Check INTERVALS_ICU_ATHLETE_ID and INTERVALS_ICU_API_KEY in .env.')
     } finally {
-      setIntervalsConnecting(false)
+      setConnecting(false)
     }
   }
 
-  const handleIntervalsDisconnect = async () => {
-    setIntervalsDisconnecting(true)
+  const handleDisconnect = async () => {
+    setDisconnecting(true)
     try {
       await athleteApi.disconnectIntervalsIcu(id!)
-      setIntervalsStatus({ connected: false })
+      setIntervalsStatus(prev => ({ connected: false, envAvailable: prev?.envAvailable }))
     } finally {
-      setIntervalsDisconnecting(false)
+      setDisconnecting(false)
+    }
+  }
+
+  const handleManualConnect = async (e: FormEvent) => {
+    e.preventDefault()
+    setManualConnecting(true)
+    setManualError(null)
+    try {
+      const result = await athleteApi.connectIntervalsIcu(id!, manualForm.athleteId, manualForm.apiKey)
+      setIntervalsStatus(prev => ({ ...prev, ...result }))
+      setManualForm({ athleteId: '', apiKey: '' })
+      setShowManualForm(false)
+    } catch {
+      setManualError('Failed to connect. Check your Athlete ID and API key.')
+    } finally {
+      setManualConnecting(false)
     }
   }
 
@@ -105,11 +123,13 @@ export default function AthleteSettings() {
       {/* intervals.icu Connection */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">intervals.icu Connection</h2>
-        {intervalsError && (
+
+        {connectError && (
           <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4 text-sm">
-            {intervalsError}
+            {connectError}
           </div>
         )}
+
         {intervalsStatus?.connected ? (
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -123,11 +143,11 @@ export default function AthleteSettings() {
               intervals.icu is connected. Go to Activities to sync your runs.
             </p>
             <button
-              onClick={handleIntervalsDisconnect}
-              disabled={intervalsDisconnecting}
+              onClick={handleDisconnect}
+              disabled={disconnecting}
               className="px-4 py-2 border border-red-700 text-red-400 hover:bg-red-900 disabled:opacity-50 text-sm rounded-lg transition-colors"
             >
-              {intervalsDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+              {disconnecting ? 'Disconnecting...' : 'Disconnect'}
             </button>
           </div>
         ) : (
@@ -136,43 +156,76 @@ export default function AthleteSettings() {
               <div className="w-2 h-2 bg-gray-500 rounded-full" />
               <span className="text-gray-400 text-sm">Not connected</span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">
-              Connect your intervals.icu account to sync running activities. Find your Athlete ID and API key at{' '}
-              <a
-                href="https://intervals.icu/settings"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                intervals.icu/settings
-              </a>{' '}
-              under <span className="text-gray-300">API Access</span>.
-            </p>
-            <form onSubmit={handleIntervalsConnect} className="flex flex-col gap-3 max-w-sm">
-              <input
-                type="text"
-                placeholder="Athlete ID (e.g. i12345)"
-                value={intervalsForm.athleteId}
-                onChange={e => setIntervalsForm(f => ({ ...f, athleteId: e.target.value }))}
-                required
-                className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-              />
-              <input
-                type="password"
-                placeholder="API key"
-                value={intervalsForm.apiKey}
-                onChange={e => setIntervalsForm(f => ({ ...f, apiKey: e.target.value }))}
-                required
-                className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-              />
-              <button
-                type="submit"
-                disabled={intervalsConnecting}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors text-sm"
-              >
-                {intervalsConnecting ? 'Connecting...' : 'Connect intervals.icu'}
-              </button>
-            </form>
+
+            {intervalsStatus?.envAvailable ? (
+              <div>
+                <p className="text-gray-400 text-sm mb-4">
+                  Connect your intervals.icu account to sync running activities.
+                </p>
+                <button
+                  onClick={handleConnect}
+                  disabled={connecting}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  {connecting ? 'Connecting...' : 'Connect intervals.icu'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-400 text-sm mb-4">
+                  To connect, set <code className="text-orange-400 text-xs">INTERVALS_ICU_ATHLETE_ID</code> and{' '}
+                  <code className="text-orange-400 text-xs">INTERVALS_ICU_API_KEY</code> in the server's{' '}
+                  <code className="text-orange-400 text-xs">.env</code> file, then click Connect. Find your credentials at{' '}
+                  <a
+                    href="https://intervals.icu/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 underline"
+                  >
+                    intervals.icu/settings
+                  </a>{' '}
+                  under <span className="text-gray-300">API Access</span>.
+                </p>
+                <button
+                  onClick={() => setShowManualForm(v => !v)}
+                  className="text-xs text-gray-500 hover:text-gray-400 underline mb-3"
+                >
+                  {showManualForm ? 'Hide manual entry' : 'Enter credentials manually instead'}
+                </button>
+                {showManualForm && (
+                  <form onSubmit={handleManualConnect} className="flex flex-col gap-3 max-w-sm mt-2">
+                    {manualError && (
+                      <div className="bg-red-900 border border-red-700 text-red-200 px-3 py-2 rounded-lg text-xs">
+                        {manualError}
+                      </div>
+                    )}
+                    <input
+                      type="text"
+                      placeholder="Athlete ID (e.g. i12345)"
+                      value={manualForm.athleteId}
+                      onChange={e => setManualForm(f => ({ ...f, athleteId: e.target.value }))}
+                      required
+                      className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                    <input
+                      type="password"
+                      placeholder="API key"
+                      value={manualForm.apiKey}
+                      onChange={e => setManualForm(f => ({ ...f, apiKey: e.target.value }))}
+                      required
+                      className="px-3 py-2 bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={manualConnecting}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors text-sm"
+                    >
+                      {manualConnecting ? 'Connecting...' : 'Connect'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

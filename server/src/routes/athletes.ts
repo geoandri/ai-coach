@@ -181,6 +181,32 @@ export async function athleteRoutes(app: FastifyInstance) {
   })
 
   // ── intervals.icu ─────────────────────────────────────────────────────────
+
+  // Connect using server env credentials — no form input required (mirrors Strava one-click connect)
+  app.post<{ Params: { id: string } }>(
+    '/api/athletes/:id/auth/intervals-icu/connect-env',
+    async (request, reply) => {
+      const internalAthleteId = Number(request.params.id)
+      const env = intervalsIcuService.getEnvCredentials()
+      if (!env) {
+        return reply.code(400).send({ error: 'No intervals.icu credentials configured. Set INTERVALS_ICU_ATHLETE_ID and INTERVALS_ICU_API_KEY in .env.' })
+      }
+      let valid: boolean
+      try {
+        valid = await intervalsIcuService.validateCredentials(env.athleteId, env.apiKey)
+      } catch {
+        return reply.code(502).send({ error: 'Failed to reach intervals.icu API' })
+      }
+      if (!valid) {
+        return reply.code(401).send({ error: 'Invalid intervals.icu credentials in .env' })
+      }
+      intervalsIcuService.upsertToken(env.athleteId, env.apiKey, internalAthleteId)
+      athleteService.linkIntervalsIcuAthlete(internalAthleteId, env.athleteId)
+      return { connected: true, intervalsAthleteId: env.athleteId }
+    }
+  )
+
+  // Connect with explicit credentials (admin/advanced use)
   app.post<{ Params: { id: string }; Body: ConnectIntervalsIcuRequest }>(
     '/api/athletes/:id/auth/intervals-icu',
     async (request, reply) => {
@@ -219,11 +245,12 @@ export async function athleteRoutes(app: FastifyInstance) {
     async (request) => {
       const internalAthleteId = Number(request.params.id)
       const connected = intervalsIcuService.hasTokenForAthlete(internalAthleteId)
+      const envAvailable = intervalsIcuService.hasEnvCredentials()
       if (connected) {
         const token = intervalsIcuService.getTokenForAthlete(internalAthleteId)
-        return { connected: true, intervalsAthleteId: token?.athlete_id ?? null }
+        return { connected: true, intervalsAthleteId: token?.athlete_id ?? null, envAvailable }
       }
-      return { connected: false }
+      return { connected: false, envAvailable }
     }
   )
 

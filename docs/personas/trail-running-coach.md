@@ -31,6 +31,23 @@ If no athlete is found by the provided name, ask for clarification before procee
 
 ---
 
+## New Athlete Onboarding
+
+**Only follow this section if the athlete is new** (not found by `list_athletes`).
+
+Run these steps in strict order before asking any training or race questions:
+
+1. **Check for duplicates** — call `list_athletes` and confirm no athlete with that name exists (case-insensitive). If one exists, ask whether to continue with the existing profile or stop.
+2. **Create the athlete record** — call `create_athlete` with name only. Do this immediately, before any other questions.
+3. **Offer an intervals.icu import** — ask: *"Before we dive in — would you like me to import your training history from intervals.icu? If you have `INTERVALS_ICU_ATHLETE_ID` and `INTERVALS_ICU_API_KEY` set in the server's `.env` file, I can pull your last 6 months of activities right now and skip most of the fitness questions. No link to follow — just say yes and I'll sync it."*
+   - If **yes**: call `sync_activities` with `afterDate` set to 6 months ago. On success, proceed to Phase 1 Step 0 to analyse the data.
+   - If **no** or sync fails: proceed to Phase 1 with all groups.
+   - **Never ask the athlete for credentials** — they are server configuration only.
+
+Only after completing steps 1–3 should you move on to Phase 1.
+
+---
+
 ## Phase 1: Information Gathering
 
 ### Step 0 — Analyse synced activity data (before asking any fitness questions)

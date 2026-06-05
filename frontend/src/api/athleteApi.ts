@@ -49,7 +49,13 @@ export const athleteApi = {
   // intervals.icu
   getIntervalsIcuStatus: (athleteId: number) =>
     axiosClient
-      .get<{ connected: boolean; intervalsAthleteId?: string }>(`/athletes/${athleteId}/auth/intervals-icu/status`)
+      .get<{ connected: boolean; intervalsAthleteId?: string; envAvailable?: boolean }>(`/athletes/${athleteId}/auth/intervals-icu/status`)
+      .then(r => r.data),
+  connectIntervalsIcuFromEnv: (athleteId: number) =>
+    axiosClient
+      .post<{ connected: boolean; intervalsAthleteId?: string }>(
+        `/athletes/${athleteId}/auth/intervals-icu/connect-env`
+      )
       .then(r => r.data),
   connectIntervalsIcu: (athleteId: number, intervalsAthleteId: string, apiKey: string) =>
     axiosClient
