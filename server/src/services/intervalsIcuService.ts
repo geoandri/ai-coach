@@ -49,7 +49,7 @@ function parseActivity(
   const activityDate = startDt.substring(0, 10)
 
   return {
-    intervalsId: Number(data.id),
+    intervalsId: String(data.id).replace(/^i/, ''),
     athleteId: intervalsAthleteId,
     internalAthleteId: internalAthleteId ?? null,
     name: (data.name as string | undefined) ?? null,
@@ -113,7 +113,7 @@ export function removeToken(internalAthleteId: number): void {
   saveDb()
 }
 
-function getEnvCredentials(): { athleteId: string; apiKey: string } | null {
+export function getEnvCredentials(): { athleteId: string; apiKey: string } | null {
   const athleteId = process.env.INTERVALS_ICU_ATHLETE_ID
   const apiKey = process.env.INTERVALS_ICU_API_KEY
   if (athleteId && apiKey) return { athleteId, apiKey }
@@ -148,36 +148,42 @@ async function syncWithCredentials(
   afterDate?: string
 ): Promise<SyncResultDto> {
   const oldest = afterDate ?? defaultOldest()
-  let page = 0
+  let pageNum = 0
   const perPage = 100
   let totalSynced = 0
+  let newest: string | null = null  // walk backwards using newest param
 
   log(`Starting sync for athlete ${intervalsAthleteId} (internal: ${internalAthleteId}), oldest=${oldest}`)
 
   while (true) {
-    const skip = page * perPage
-    log(`Fetching page ${page + 1} (skip=${skip}, limit=${perPage})`)
+    pageNum++
+    const url = newest
+      ? `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&newest=${newest}&limit=${perPage}`
+      : `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}`
 
-    if (page > 0) await sleep(REQUEST_DELAY_MS)
+    log(`Fetching page ${pageNum}${newest ? ` (newest=${newest})` : ''}`)
 
-    const resp = await axios.get<unknown[]>(
-      `${INTERVALS_API_BASE}/athlete/${intervalsAthleteId}/activities?oldest=${oldest}&limit=${perPage}&skip=${skip}`,
-      { headers: { Authorization: authHeader(apiKey) }, timeout: 15000 }
-    )
+    if (pageNum > 1) await sleep(REQUEST_DELAY_MS)
+
+    const resp = await axios.get<unknown[]>(url, {
+      headers: { Authorization: authHeader(apiKey) },
+      timeout: 15000,
+    })
     const activities = resp.data as Record<string, unknown>[]
     if (!activities || activities.length === 0) {
-      log(`Page ${page + 1} returned 0 activities — sync complete`)
+      log(`Page ${pageNum} returned 0 activities — sync complete`)
       break
     }
 
-    log(`Page ${page + 1}: ${activities.length} activities received`)
+    log(`Page ${pageNum}: ${activities.length} activities received`)
     let pageInserted = 0
 
     for (const activity of activities) {
       const sportType = (activity.type as string | undefined) ?? ''
       if (!RUNNING_SPORT_TYPES.includes(sportType)) continue
 
-      const intervalsId = Number(activity.id)
+      const rawId = activity.id as string | number
+      const intervalsId = typeof rawId === 'string' ? rawId.replace(/^i/, '') : String(rawId)
       const existing = queryRows(
         'SELECT id, internal_athlete_id FROM intervals_icu_activities WHERE intervals_id = ?',
         [intervalsId]
@@ -214,13 +220,22 @@ async function syncWithCredentials(
       }
     }
 
-    log(`Page ${page + 1}: inserted/updated ${pageInserted} running activities`)
+    log(`Page ${pageNum}: inserted/updated ${pageInserted} running activities`)
 
     if (activities.length < perPage) {
       log('Last page reached — sync complete')
       break
     }
-    page++
+
+    // Set newest to just before the last activity's date to paginate backwards.
+    // start_date_local is already local time — manipulate it as a string to avoid UTC conversion.
+    const lastDate = (activities[activities.length - 1].start_date_local as string | undefined) ?? ''
+    if (!lastDate) {
+      log('No date on last activity — stopping')
+      break
+    }
+    // Trim to seconds precision and use directly — it's local time already
+    newest = lastDate.replace('Z', '').substring(0, 19)
   }
 
   saveDb()
