@@ -22,6 +22,7 @@ export declare const planTools: ({
             plannedKm?: undefined;
             plannedVertM?: undefined;
             notes?: undefined;
+            workouts?: undefined;
         };
         required: string[];
     };
@@ -51,6 +52,7 @@ export declare const planTools: ({
             plannedKm?: undefined;
             plannedVertM?: undefined;
             notes?: undefined;
+            workouts?: undefined;
         };
         required: string[];
     };
@@ -160,6 +162,7 @@ export declare const planTools: ({
             plannedKm?: undefined;
             plannedVertM?: undefined;
             notes?: undefined;
+            workouts?: undefined;
         };
         required: string[];
     };
@@ -189,6 +192,7 @@ export declare const planTools: ({
             plannedKm?: undefined;
             plannedVertM?: undefined;
             notes?: undefined;
+            workouts?: undefined;
         };
         required: string[];
     };
@@ -217,6 +221,41 @@ export declare const planTools: ({
             };
             notes: {
                 type: string;
+            };
+            workouts: {
+                type: string;
+                description: string;
+                items: {
+                    type: string;
+                    properties: {
+                        workoutDate: {
+                            type: string;
+                            description: string;
+                        };
+                        dayOfWeek: {
+                            type: string;
+                        };
+                        workoutType: {
+                            type: string;
+                        };
+                        description: {
+                            type: string;
+                        };
+                        plannedKm: {
+                            type: string;
+                        };
+                        plannedVertM: {
+                            type: string;
+                        };
+                        isRestDay: {
+                            type: string;
+                        };
+                        isRaceDay: {
+                            type: string;
+                        };
+                    };
+                    required: string[];
+                };
             };
             name?: undefined;
             raceDate?: undefined;

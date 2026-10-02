@@ -20,8 +20,8 @@ export interface Athlete {
     raceDate?: string;
     raceDistanceKm?: number;
     raceElevationM?: number;
-    stravaEnabled?: boolean;
-    stravaAthleteId?: number;
+    intervalsIcuEnabled?: boolean;
+    intervalsIcuAthleteId?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -71,6 +71,16 @@ export interface WeeklyBlock {
     notes?: string;
     workouts: DailyWorkout[];
 }
+export interface WeeklyBlockSummary {
+    id?: number;
+    weekNumber: number;
+    phase?: string;
+    startDate: string;
+    endDate: string;
+    plannedKm?: number;
+    plannedVertM?: number;
+    notes?: string;
+}
 export interface TrainingPlan {
     id: number;
     athleteId: number;
@@ -81,6 +91,17 @@ export interface TrainingPlan {
     tuneUpRaceName?: string;
     tuneUpRaceDate?: string;
     weeks: WeeklyBlock[];
+}
+export interface TrainingPlanSummary {
+    id: number;
+    athleteId: number;
+    name: string;
+    totalWeeks: number;
+    raceDate?: string;
+    raceName?: string;
+    tuneUpRaceName?: string;
+    tuneUpRaceDate?: string;
+    weeks: WeeklyBlockSummary[];
 }
 export interface CreateTrainingPlanRequest {
     name: string;
@@ -127,21 +148,48 @@ export interface SyncResultDto {
     syncedCount: number;
     message: string;
 }
+export interface UpdateWeekRequest {
+    phase?: string;
+    plannedKm?: number;
+    plannedVertM?: number;
+    notes?: string;
+    workouts?: Array<{
+        workoutDate: string;
+        dayOfWeek?: string;
+        workoutType?: string;
+        description?: string;
+        plannedKm?: number;
+        plannedVertM?: number;
+        isRestDay?: boolean;
+        isRaceDay?: boolean;
+    }>;
+}
 export declare class AiCoachClient {
     private http;
-    constructor(baseUrl: string);
+    private publicBaseUrl;
+    constructor(baseUrl: string, publicBaseUrl?: string);
     listAthletes(): Promise<Athlete[]>;
     getAthlete(athleteId: number): Promise<Athlete>;
     createAthlete(request: CreateAthleteRequest): Promise<Athlete>;
     updateAthlete(athleteId: number, request: UpdateAthleteRequest): Promise<Athlete>;
     addCoachNote(athleteId: number, note: string): Promise<Athlete>;
     getTrainingPlan(athleteId: number): Promise<TrainingPlan | null>;
+    getTrainingPlanSummary(athleteId: number): Promise<TrainingPlanSummary | null>;
     createTrainingPlan(athleteId: number, request: CreateTrainingPlanRequest): Promise<TrainingPlan>;
     deleteTrainingPlan(athleteId: number, planId: number): Promise<void>;
     getWeekDetail(athleteId: number, weekNumber: number): Promise<WeeklyBlock | null>;
+    updateWeek(athleteId: number, weekNumber: number, request: UpdateWeekRequest): Promise<WeeklyBlock>;
     getPlanVsActual(athleteId: number, startDate: string, endDate: string): Promise<PlanVsActualDto>;
     getDashboardSummary(athleteId: number): Promise<unknown>;
     syncActivities(athleteId: number, afterDate?: string): Promise<SyncResultDto>;
-    getStravaConnectUrl(athleteId: number): string;
+    connectIntervalsIcu(athleteId: number, intervalsAthleteId: string, apiKey: string): Promise<{
+        connected: boolean;
+        intervalsAthleteId?: string;
+    }>;
+    disconnectIntervalsIcu(athleteId: number): Promise<void>;
+    getIntervalsIcuStatus(athleteId: number): Promise<{
+        connected: boolean;
+        intervalsAthleteId?: string;
+    }>;
 }
 //# sourceMappingURL=client.d.ts.map

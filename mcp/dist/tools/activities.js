@@ -3,7 +3,7 @@ export const activityTools = [
     {
         name: 'get_plan_vs_actual',
         description: [
-            'Compare planned workouts against actual Strava activities for an athlete over a date range.',
+            'Compare planned workouts against actual activities for an athlete over a date range.',
             'Returns day-by-day breakdown of planned vs actual km, elevation, and workout match.',
             'Use this to review adherence and adjust the training plan.'
         ].join(' '),
@@ -31,9 +31,9 @@ export const activityTools = [
     {
         name: 'sync_activities',
         description: [
-            'Trigger a Strava activity sync for an athlete. Pulls new runs from their connected Strava account.',
+            'Trigger an activity sync for an athlete. Pulls new runs from their connected intervals.icu account.',
             'Use afterDate (YYYY-MM-DD) to limit the sync to activities after a specific date.',
-            'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.'
+            'For initial intake assessment pass afterDate as 12 months ago to avoid pulling all-time history.',
         ].join(' '),
         inputSchema: {
             type: 'object',

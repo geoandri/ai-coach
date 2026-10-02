@@ -152,6 +152,8 @@ async function syncWithCredentials(
   const perPage = 100
   let totalSynced = 0
   let newest: string | null = null  // walk backwards using newest param
+  let consecutiveZeroPages = 0
+  const MAX_CONSECUTIVE_ZERO_PAGES = 5
 
   log(`Starting sync for athlete ${intervalsAthleteId} (internal: ${internalAthleteId}), oldest=${oldest}`)
 
@@ -225,6 +227,16 @@ async function syncWithCredentials(
     if (activities.length < perPage) {
       log('Last page reached — sync complete')
       break
+    }
+
+    if (pageInserted === 0) {
+      consecutiveZeroPages++
+      if (consecutiveZeroPages >= MAX_CONSECUTIVE_ZERO_PAGES) {
+        log(`${MAX_CONSECUTIVE_ZERO_PAGES} consecutive pages with no new running activities — sync complete`)
+        break
+      }
+    } else {
+      consecutiveZeroPages = 0
     }
 
     // Set newest to just before the last activity's date to paginate backwards.

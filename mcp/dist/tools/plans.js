@@ -22,7 +22,7 @@ const WeeklyBlockSchema = z.object({
 export const planTools = [
     {
         name: 'get_training_plan',
-        description: 'Get the training plan for an athlete including all weeks and daily workouts.',
+        description: 'Get a summary of the training plan for an athlete: plan metadata and one row per week (phase, dates, planned km/vert) without individual workouts. Use get_week_detail to fetch daily workouts for a specific week.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -115,7 +115,7 @@ export const planTools = [
     },
     {
         name: 'update_training_plan',
-        description: 'Update a specific week in an athlete\'s training plan (e.g. after reviewing actuals).',
+        description: 'Update a specific week in an athlete\'s training plan. Can update week-level fields (phase, plannedKm, plannedVertM, notes) and/or individual daily workouts within the week.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -124,7 +124,25 @@ export const planTools = [
                 phase: { type: 'string' },
                 plannedKm: { type: 'number' },
                 plannedVertM: { type: 'number' },
-                notes: { type: 'string' }
+                notes: { type: 'string' },
+                workouts: {
+                    type: 'array',
+                    description: 'Daily workouts to update. Only workouts listed here will be changed; others are left as-is.',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            workoutDate: { type: 'string', description: 'Date of the workout to update (YYYY-MM-DD)' },
+                            dayOfWeek: { type: 'string' },
+                            workoutType: { type: 'string' },
+                            description: { type: 'string' },
+                            plannedKm: { type: 'number' },
+                            plannedVertM: { type: 'number' },
+                            isRestDay: { type: 'boolean' },
+                            isRaceDay: { type: 'boolean' }
+                        },
+                        required: ['workoutDate']
+                    }
+                }
             },
             required: ['athleteId', 'weekNumber']
         }
@@ -143,12 +161,30 @@ const CreatePlanSchema = z.object({
 const DeletePlanSchema = z.object({ athleteId: z.number(), planId: z.number() });
 const GetWeekSchema = z.object({ athleteId: z.number(), weekNumber: z.number() });
 const GetPlanSchema = z.object({ athleteId: z.number() });
+const UpdateWeekSchema = z.object({
+    athleteId: z.number(),
+    weekNumber: z.number(),
+    phase: z.string().optional(),
+    plannedKm: z.number().optional(),
+    plannedVertM: z.number().optional(),
+    notes: z.string().optional(),
+    workouts: z.array(z.object({
+        workoutDate: z.string(),
+        dayOfWeek: z.string().optional(),
+        workoutType: z.string().optional(),
+        description: z.string().optional(),
+        plannedKm: z.number().optional(),
+        plannedVertM: z.number().optional(),
+        isRestDay: z.boolean().optional(),
+        isRaceDay: z.boolean().optional()
+    })).optional()
+});
 export async function handlePlanTool(name, args, client) {
     const text = (obj) => [{ type: 'text', text: JSON.stringify(obj, null, 2) }];
     switch (name) {
         case 'get_training_plan': {
             const { athleteId } = GetPlanSchema.parse(args);
-            const plan = await client.getTrainingPlan(athleteId);
+            const plan = await client.getTrainingPlanSummary(athleteId);
             if (!plan) {
                 return { content: text({ message: `No training plan found for athlete ${athleteId}` }) };
             }
@@ -173,25 +209,9 @@ export async function handlePlanTool(name, args, client) {
             return { content: text({ message: `Training plan ${planId} deleted for athlete ${athleteId}` }) };
         }
         case 'update_training_plan': {
-            // update_training_plan: get the plan, find the week, update it
-            // We use get_week_detail + inform the user since we don't have a dedicated update endpoint
-            const parsed = z.object({
-                athleteId: z.number(),
-                weekNumber: z.number(),
-                phase: z.string().optional(),
-                plannedKm: z.number().optional(),
-                plannedVertM: z.number().optional(),
-                notes: z.string().optional()
-            }).parse(args);
-            // Return current week state with note that direct update is done via coach notes
-            const week = await client.getWeekDetail(parsed.athleteId, parsed.weekNumber);
-            return {
-                content: text({
-                    message: 'Week retrieved. To update week details, modify the plan by deleting and recreating it, or add coach notes.',
-                    currentWeek: week,
-                    requestedChanges: parsed
-                })
-            };
+            const { athleteId, weekNumber, ...request } = UpdateWeekSchema.parse(args);
+            const week = await client.updateWeek(athleteId, weekNumber, request);
+            return { content: text(week) };
         }
         default:
             throw new Error(`Unknown plan tool: ${name}`);

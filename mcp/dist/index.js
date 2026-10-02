@@ -6,19 +6,26 @@ import { AiCoachClient } from './client.js';
 import { athleteTools, handleAthleteTool } from './tools/athletes.js';
 import { planTools, handlePlanTool } from './tools/plans.js';
 import { activityTools, handleActivityTool } from './tools/activities.js';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8080/api';
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:3000/api';
 const publicUrl = process.env.PUBLIC_URL ?? backendUrl;
 const client = new AiCoachClient(backendUrl, publicUrl);
 // Load coach persona prompts from docs/personas/ at startup.
-// Files starting with _ (e.g. _base.md, _template.md) are skipped.
-const personasDir = join(__dirname, '..', '..', 'docs', 'personas');
+// _base.md is prepended to every persona so the agent receives a single complete document.
+// _template.md and other _ files are skipped.
+// Artifact layout: <root>/mcp/dist/index.js + <root>/personas/ → go up two levels
+// Repo dev layout: mcp/dist/index.js + docs/personas/          → go up two levels + docs/
+const personasDirArtifact = join(__dirname, '..', '..', 'personas');
+const personasDirRepo = join(__dirname, '..', '..', 'docs', 'personas');
+const personasDir = existsSync(personasDirArtifact) ? personasDirArtifact : personasDirRepo;
 function loadPersonas() {
     try {
+        const baseFile = join(personasDir, '_base.md');
+        const baseContent = existsSync(baseFile) ? readFileSync(baseFile, 'utf-8') + '\n\n---\n\n' : '';
         return readdirSync(personasDir)
             .filter(f => f.endsWith('.md') && !f.startsWith('_'))
             .map(f => {
@@ -28,7 +35,7 @@ function loadPersonas() {
             const description = titleMatch
                 ? `Load the ${titleMatch[1]} persona as your coaching context`
                 : `Load the ${name} coach persona`;
-            return { name, description, content };
+            return { name, description, content: baseContent + content };
         });
     }
     catch {

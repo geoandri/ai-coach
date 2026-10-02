@@ -27,6 +27,8 @@ export declare const athleteTools: ({
             raceDistanceKm?: undefined;
             raceElevationM?: undefined;
             note?: undefined;
+            intervalsAthleteId?: undefined;
+            apiKey?: undefined;
         };
         required: never[];
     };
@@ -61,6 +63,8 @@ export declare const athleteTools: ({
             raceDistanceKm?: undefined;
             raceElevationM?: undefined;
             note?: undefined;
+            intervalsAthleteId?: undefined;
+            apiKey?: undefined;
         };
         required: string[];
     };
@@ -154,6 +158,8 @@ export declare const athleteTools: ({
             };
             athleteId?: undefined;
             note?: undefined;
+            intervalsAthleteId?: undefined;
+            apiKey?: undefined;
         };
         required: string[];
     };
@@ -250,6 +256,8 @@ export declare const athleteTools: ({
                 description: string;
             };
             note?: undefined;
+            intervalsAthleteId?: undefined;
+            apiKey?: undefined;
         };
         required: string[];
     };
@@ -287,6 +295,50 @@ export declare const athleteTools: ({
             raceDate?: undefined;
             raceDistanceKm?: undefined;
             raceElevationM?: undefined;
+            intervalsAthleteId?: undefined;
+            apiKey?: undefined;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: "object";
+        properties: {
+            athleteId: {
+                type: string;
+                description: string;
+            };
+            intervalsAthleteId: {
+                type: string;
+                description: string;
+            };
+            apiKey: {
+                type: string;
+                description: string;
+            };
+            name?: undefined;
+            email?: undefined;
+            experienceYears?: undefined;
+            fitnessLevel?: undefined;
+            currentWeeklyKm?: undefined;
+            longestRecentRunKm?: undefined;
+            recentRaces?: undefined;
+            trainingDaysPerWeek?: undefined;
+            preferredLongRunDay?: undefined;
+            injuries?: undefined;
+            strengthTrainingFrequency?: undefined;
+            goalType?: undefined;
+            targetFinishTime?: undefined;
+            trailAccess?: undefined;
+            coachNotes?: undefined;
+            athleteSummary?: undefined;
+            raceName?: undefined;
+            raceDate?: undefined;
+            raceDistanceKm?: undefined;
+            raceElevationM?: undefined;
+            note?: undefined;
         };
         required: string[];
     };
